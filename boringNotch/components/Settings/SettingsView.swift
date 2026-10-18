@@ -15,6 +15,7 @@ import SwiftUI
 import SwiftUIIntrospect
 
 struct SettingsView: View {
+    @AppStorage("settingsLanguage") private var settingsLanguage = "zh-Hans"
     @State private var selectedTab = "General"
     @State private var accentColorUpdateTrigger = UUID()
 
@@ -51,6 +52,9 @@ struct SettingsView: View {
                 NavigationLink(value: "Shelf") {
                     Label("Shelf", systemImage: "books.vertical")
                 }
+                NavigationLink(value: "Codex") {
+                    Label("Codex", systemImage: "chevron.left.forwardslash.chevron.right")
+                }
                 NavigationLink(value: "Shortcuts") {
                     Label("Shortcuts", systemImage: "keyboard")
                 }
@@ -85,6 +89,8 @@ struct SettingsView: View {
                     Charge()
                 case "Shelf":
                     Shelf()
+                case "Codex":
+                    CodexSettings()
                 case "Shortcuts":
                     Shortcuts()
                 case "Extensions":
@@ -110,17 +116,28 @@ struct SettingsView: View {
         .navigationSplitViewStyle(.balanced)
         .toolbar(removing: .sidebarToggle)
         .toolbar {
+            ToolbarItem(placement: .primaryAction) {
+                Button {
+                    settingsLanguage = settingsLanguage == "en" ? "zh-Hans" : "en"
+                } label: {
+                    Label(settingsLanguage == "en" ? "简体中文" : "English", systemImage: "globe")
+                }
+                .buttonStyle(.bordered)
+                .help("简体中文 / English")
+                .accessibilityLabel("简体中文 / English")
+            }
             ToolbarItem(placement: .principal) {
                 Text("")
                     .frame(width: 0, height: 0)
                     .accessibilityHidden(true)
             }
         }
+        .environment(\.locale, Locale(identifier: settingsLanguage))
         .formStyle(.grouped)
         .frame(width: 700)
         .background(Color(NSColor.windowBackgroundColor))
         .tint(.effectiveAccent)
-        .id(accentColorUpdateTrigger)
+        .id("\(accentColorUpdateTrigger)-\(settingsLanguage)")
         .onReceive(NotificationCenter.default.publisher(for: NSNotification.Name("AccentColorChanged"))) { _ in
             accentColorUpdateTrigger = UUID()
         }
@@ -128,6 +145,8 @@ struct SettingsView: View {
 }
 
 struct GeneralSettings: View {
+    @AppStorage("horizontalPageSwipe") private var horizontalPageSwipe = true
+    @AppStorage("codexTaskNavigation") private var codexTaskNavigation = "region"
     @State private var screens: [(uuid: String, name: String)] = NSScreen.screens.compactMap { screen in
         guard let uuid = screen.displayUUID else { return nil }
         return (uuid, screen.localizedName)
@@ -159,7 +178,7 @@ struct GeneralSettings: View {
                     Text("Show menu bar icon")
                 }
                 .tint(.effectiveAccent)
-                LaunchAtLogin.Toggle("Launch at login")
+                LaunchAtLogin.Toggle { Text("Launch at login") }
                 Defaults.Toggle(key: .showOnAllDisplays) {
                     Text("Show on all displays")
                 }
@@ -270,7 +289,7 @@ struct GeneralSettings: View {
             .controlSize(.extraLarge)
         }
         .accentColor(.effectiveAccent)
-        .navigationTitle("General")
+        .settingsNavigationTitle("General")
         .onChange(of: openNotchOnHover) {
             if !openNotchOnHover {
                 enableGestures = true
@@ -281,13 +300,19 @@ struct GeneralSettings: View {
     @ViewBuilder
     func gestureControls() -> some View {
         Section {
+            Toggle("Switch pages with two-finger horizontal swipes", isOn: $horizontalPageSwipe)
+                .help("Swipe left for the next page and right for the previous page while the notch is open")
+            Picker("Codex task navigation", selection: $codexTaskNavigation) {
+                Text("Swipe tasks in task area, switch pages elsewhere").tag("region")
+                Text("Swipe pages everywhere, browse tasks with controls").tag("pages")
+            }
+            Text("The task bar and arrow buttons remain available in both modes.")
+                .font(.caption).foregroundStyle(.secondary)
             Defaults.Toggle(key: .enableGestures) {
-                Text("Enable gestures")
+                Text("Enable vertical gestures")
             }
                 .disabled(!openNotchOnHover)
             if enableGestures {
-                Toggle("Change media with horizontal gestures", isOn: .constant(false))
-                    .disabled(true)
                 Defaults.Toggle(key: .closeGestureEnabled) {
                     Text("Close gesture")
                 }
@@ -378,7 +403,7 @@ struct Charge: View {
             }
         }
         .accentColor(.effectiveAccent)
-        .navigationTitle("Battery")
+        .settingsNavigationTitle("Battery")
     }
 }
 
@@ -502,7 +527,7 @@ struct HUD: View {
                 }
                 Picker("Option key behaviour", selection: $optionKeyAction) {
                     ForEach(OptionKeyAction.allCases) { opt in
-                        Text(opt.rawValue).tag(opt)
+                        Text(LocalizedStringKey(opt.rawValue)).tag(opt)
                     }
                 }
                 .pickerStyle(.radioGroup)
@@ -543,7 +568,7 @@ struct HUD: View {
             }
         }
         .accentColor(.effectiveAccent)
-        .navigationTitle("HUDs")
+        .settingsNavigationTitle("HUDs")
         .task {
             accessibilityAuthorized = await XPCHelperClient.shared.isAccessibilityAuthorized()
         }
@@ -570,7 +595,7 @@ struct Media: View {
             Section {
                 Picker("Music Source", selection: $mediaController) {
                     ForEach(availableMediaControllers) { controller in
-                        Text(controller.rawValue).tag(controller)
+                        Text(LocalizedStringKey(controller.rawValue)).tag(controller)
                     }
                 }
                 .onChange(of: mediaController) { _, _ in
@@ -611,7 +636,7 @@ struct Media: View {
                 Toggle("Show sneak peek on playback changes", isOn: $enableSneakPeek)
                 Picker("Sneak Peek Style", selection: $sneakPeekStyles) {
                     ForEach(SneakPeekStyle.allCases) { style in
-                        Text(style.rawValue).tag(style)
+                        Text(LocalizedStringKey(style.rawValue)).tag(style)
                     }
                 }
                 HStack {
@@ -658,7 +683,7 @@ struct Media: View {
             }
         }
         .accentColor(.effectiveAccent)
-        .navigationTitle("Media")
+        .settingsNavigationTitle("Media")
     }
 
     // Only show controller options that are available on this macOS version
@@ -769,7 +794,7 @@ struct CalendarSettings: View {
             }
         }
         .accentColor(.effectiveAccent)
-        .navigationTitle("Calendar")
+        .settingsNavigationTitle("Calendar")
         .onAppear {
             Task {
                 await calendarManager.checkCalendarAuthorization()
@@ -839,7 +864,7 @@ struct About: View {
                         VStack(spacing: 5) {
                             Image(systemName: "cup.and.saucer.fill")
                                 .imageScale(.large)
-                            Text("Support Us")
+                            Text("Support upstream")
                                 .foregroundStyle(.white)
                         }
                         .contentShape(Rectangle())
@@ -880,12 +905,49 @@ struct About: View {
             //            .controlSize(.extraLarge)
             CheckForUpdatesView(updater: updaterController.updater)
         }
-        .navigationTitle("About")
+        .settingsNavigationTitle("About")
+    }
+}
+
+struct CodexSettings: View {
+    @ObservedObject private var monitor = CodexMonitor.shared
+    @AppStorage("codexCompletionReminderDuration") private var completionReminderDuration: Double = 6
+    private var completionSeconds: Double { CodexReminderTiming.completionDuration(completionReminderDuration) }
+    var body: some View {
+        Form {
+            Section("提醒") {
+                Toggle("任务完成或需要操作时自动下滑提醒", isOn: $monitor.remindersEnabled)
+                Stepper(value: Binding(get: { completionSeconds }, set: { completionReminderDuration = $0 }), in: 1...60, step: 1) {
+                    LabeledContent("完成提醒展示时长") {
+                        Text("\(Int(completionSeconds)) 秒")
+                    }
+                }
+                .disabled(!monitor.remindersEnabled)
+                Text("可设为 1–60 秒，默认 6 秒；修改对下一次完成提醒生效。光标停留时保持展开，需要人工操作的提醒仍展示 12 秒。")
+                    .font(.caption).foregroundStyle(.secondary)
+                Text("完成提醒展开时，对应任务的边框会短暂闪烁，并自动滚动到该任务。")
+                    .font(.caption).foregroundStyle(.secondary)
+            }
+            Section("连接") {
+                LabeledContent("当前状态") {
+                    Text(LocalizedStringKey(monitor.connectionLabel))
+                }
+                HStack {
+                    Button("连接 Codex") { monitor.reconnect() }
+                    Button("选择数据目录…") { monitor.chooseDirectory() }
+                }
+                Text("连续 5 分钟未能连接成功后，停止自动尝试。点击连接按钮可重新开始；已连接期间不会因超过 5 分钟而断开。")
+                    .font(.caption).foregroundStyle(.secondary)
+            }
+        }
+        .settingsNavigationTitle("Codex")
     }
 }
 
 struct Shelf: View {
     
+    @AppStorage("shelfShowQuickShare") private var showQuickShare = true
+    @AppStorage("shelfCopyFirst") private var copyFirst = true
     @Default(.shelfTapToOpen) var shelfTapToOpen: Bool
     @Default(.quickShareProvider) var quickShareProvider
     @Default(.expandedDragDetection) var expandedDragDetection: Bool
@@ -917,12 +979,12 @@ struct Shelf: View {
                         object: nil
                     )
                 }
-                Defaults.Toggle(key: .copyOnDrag) {
-                    Text("Copy items on drag")
-                }
-                Defaults.Toggle(key: .autoRemoveShelfItems) {
-                    Text("Remove from shelf after dragging")
-                }
+                Toggle("显示隔空投送／快捷分享区域", isOn: $showQuickShare)
+                Toggle("复制区在左侧", isOn: $copyFirst)
+                Text("关闭快捷分享区域可腾出空间。区域按钮整块都支持拖入，描边和勾选标记表示当前区域。")
+                    .font(.caption).foregroundStyle(.secondary)
+                LabeledContent("剪切区") { Text("成功拖出移动后，移除收纳记录") }
+                LabeledContent("复制区") { Text("拖出复制，保留原文件和收纳记录") }
 
             } header: {
                 HStack {
@@ -989,7 +1051,7 @@ struct Shelf: View {
             }
         }
         .accentColor(.effectiveAccent)
-        .navigationTitle("Shelf")
+        .settingsNavigationTitle("Shelf")
     }
 }
 
@@ -1163,14 +1225,15 @@ struct Appearance: View {
                 Defaults.Toggle(key: .coloredSpectrogram) {
                     Text("Colored spectrogram")
                 }
-                Defaults
-                    .Toggle("Player tinting", key: .playerColorTinting)
+                Defaults.Toggle(key: .playerColorTinting) {
+                    Text("Player tinting")
+                }
                 Defaults.Toggle(key: .lightingEffect) {
                     Text("Enable blur effect behind album art")
                 }
                 Picker("Slider color", selection: $sliderColor) {
                     ForEach(SliderColorEnum.allCases, id: \.self) { option in
-                        Text(option.rawValue)
+                        Text(LocalizedStringKey(option.rawValue))
                     }
                 }
             } header: {
@@ -1372,7 +1435,7 @@ struct Appearance: View {
             }
         }
         .accentColor(.effectiveAccent)
-        .navigationTitle("Appearance")
+        .settingsNavigationTitle("Appearance")
     }
 
     func checkVideoInput() -> Bool {
@@ -1605,7 +1668,7 @@ struct Advanced: View {
             }
         }
         .accentColor(.effectiveAccent)
-        .navigationTitle("Advanced")
+        .settingsNavigationTitle("Advanced")
         .onAppear {
             loadCustomColor()
         }
@@ -1693,7 +1756,7 @@ struct AccentCircleButton: View {
             }
         }
         .buttonStyle(.plain)
-        .help(isSystemDefault ? "Use your macOS system accent color" : "")
+        .help(Text(LocalizedStringKey(isSystemDefault ? "Use your macOS system accent color" : "")))
     }
 }
 
@@ -1717,7 +1780,7 @@ struct Shortcuts: View {
             }
         }
         .accentColor(.effectiveAccent)
-        .navigationTitle("Shortcuts")
+        .settingsNavigationTitle("Shortcuts")
     }
 }
 
@@ -1743,7 +1806,7 @@ func comingSoonTag() -> some View {
 }
 
 func customBadge(text: String) -> some View {
-    Text(text)
+    Text(LocalizedStringKey(text))
         .foregroundStyle(.secondary)
         .font(.footnote.bold())
         .padding(.vertical, 3)
@@ -1759,13 +1822,31 @@ func warningBadge(_ text: String, _ description: String) -> some View {
                 .font(.system(size: 22))
                 .foregroundStyle(.yellow)
             VStack(alignment: .leading) {
-                Text(text)
+                Text(LocalizedStringKey(text))
                     .font(.headline)
-                Text(description)
+                Text(LocalizedStringKey(description))
                     .foregroundStyle(.secondary)
             }
             Spacer()
         }
+    }
+}
+
+// AppKit navigation titles resolve against the system language unless supplied verbatim.
+private struct SettingsNavigationTitle: ViewModifier {
+    let key: String
+    @AppStorage("settingsLanguage") private var language = "zh-Hans"
+
+    func body(content: Content) -> some View {
+        let bundle = Bundle.main.path(forResource: language, ofType: "lproj")
+            .flatMap { Bundle(path: $0) } ?? .main
+        content.navigationTitle(Text(verbatim: bundle.localizedString(forKey: key, value: key, table: nil)))
+    }
+}
+
+private extension View {
+    func settingsNavigationTitle(_ key: String) -> some View {
+        modifier(SettingsNavigationTitle(key: key))
     }
 }
 

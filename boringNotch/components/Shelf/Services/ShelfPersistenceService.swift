@@ -24,6 +24,12 @@ final class ShelfPersistenceService {
         let dir = (support ?? fm.temporaryDirectory).appendingPathComponent("boringNotch", isDirectory: true).appendingPathComponent("Shelf", isDirectory: true)
         try? fm.createDirectory(at: dir, withIntermediateDirectories: true)
         fileURL = dir.appendingPathComponent("items.json")
+        // Preserve the pre-zone shelf before any migration or bookmark cleanup.
+        let migrationBackup = dir.appendingPathComponent("items.before-dual-zone.json")
+        if fm.fileExists(atPath: fileURL.path), !fm.fileExists(atPath: migrationBackup.path) {
+            do { try fm.copyItem(at: fileURL, to: migrationBackup) }
+            catch { NSLog("Could not back up the existing shelf: %@", error.localizedDescription) }
+        }
         encoder.outputFormatting = [.prettyPrinted]
         decoder.dateDecodingStrategy = .iso8601
         encoder.dateEncodingStrategy = .iso8601

@@ -1,0 +1,12 @@
+boringNotch Codex — unofficial fork
+
+Upstream: TheBoredTeam/boring.notch, v2.7.3
+Base: 16b0f11f51c79d42e27c10d77fd9e53c11410fdb
+Modified: 2026-10-17 through 2026-10-18
+
+This fork adds Codex task monitoring and explicit request handling, a two-zone
+shelf, gesture/navigation and localization changes, and fork-specific release
+configuration. See CHANGELOG.md for modification notices and validation limits.
+Original authors' notices remain in their source files. The GNU GPL version 3
+and third-party license notices remain applicable. This is not an official
+release of the upstream project, OpenAI, or Pinland.

@@ -189,7 +189,22 @@ class BoringViewModel: NSObject, ObservableObject {
         return false
     }
 
-    func open() {
+    func open(preferredView: NotchViews? = nil) {
+        if let preferredView {
+            coordinator.currentView = preferredView
+        } else if notchState == .closed {
+            switch NotchDefaultContent.choose(isPlaying: MusicManager.shared.isPlaying,
+                                             hasCodex: CodexMonitor.shared.hasRelevantTasks) {
+            case .media: coordinator.currentView = .home
+            case .codex: coordinator.currentView = .codex
+            case .fallback:
+                if !ShelfStateViewModel.shared.isEmpty && Defaults[.openShelfByDefault] {
+                    coordinator.currentView = .shelf
+                } else if !coordinator.openLastTabByDefault {
+                    coordinator.currentView = .home
+                }
+            }
+        }
         self.notchSize = openNotchSize
         self.notchState = .open
         

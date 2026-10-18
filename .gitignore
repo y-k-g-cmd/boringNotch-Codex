@@ -53,3 +53,24 @@ build/
 *.xcarchive
 *.dSYM
 
+
+.local-build/
+
+# Fork: local credentials, runtime data, signing and developer-only mirrors
+.env
+.env.*
+!.env.example
+.codex/
+auth.json
+credentials.json
+*.p12
+*.p8
+*.pem
+*.key
+*.mobileprovision
+*.provisionprofile
+*.xcresult
+boringNotch.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/configuration/
+release-private/
+dist/
+outputs/

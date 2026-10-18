@@ -31,7 +31,8 @@ extension SkyLightOperator {
     }
 }
 
-class BoringNotchSkyLightWindow: NSPanel {
+class BoringNotchSkyLightWindow: NSPanel, CodexInputWindow {
+    var codexInputEnabled = false
     private var isSkyLightEnabled: Bool = false
     
     override init(
@@ -53,6 +54,7 @@ class BoringNotchSkyLightWindow: NSPanel {
     
     private func configureWindow() {
         isFloatingPanel = true
+        hidesOnDeactivate = false
         isOpaque = false
         titleVisibility = .hidden
         titlebarAppearsTransparent = true
@@ -106,6 +108,6 @@ class BoringNotchSkyLightWindow: NSPanel {
     
     private var observers: Set<AnyCancellable> = []
     
-    override var canBecomeKey: Bool { false }
+    override var canBecomeKey: Bool { codexInputEnabled }
     override var canBecomeMain: Bool { false }
 }

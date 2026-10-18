@@ -12,10 +12,17 @@ import Defaults
 import KeyboardShortcuts
 import SwiftUI
 import SwiftUIIntrospect
+import UniformTypeIdentifiers
 
 @MainActor
 struct ContentView: View {
     @EnvironmentObject var vm: BoringViewModel
+    private let codexMonitor = CodexMonitor.shared
+    @State private var codexState = CodexNotchState()
+    @State private var codexReminderTask: Task<Void, Never>?
+    @State private var codexReminderUntil = Date.distantPast
+    @AppStorage("horizontalPageSwipe") private var horizontalPageSwipe = true
+    @AppStorage("codexTaskNavigation") private var codexTaskNavigation = "region"
     @ObservedObject var webcamManager = WebcamManager.shared
 
     @ObservedObject var coordinator = BoringViewCoordinator.shared
@@ -100,25 +107,26 @@ struct ContentView: View {
                         : cornerRadiusInsets.closed.bottom
                     )
                     .padding([.horizontal, .bottom], vm.notchState == .open ? 12 : 0)
-                    .background(.black)
                     .clipShape(currentNotchShape)
+                    .background {
+                        // Only the solid shell casts a shadow, independent of live card content.
+                        currentNotchShape.fill(.black)
+                            .shadow(color: ((vm.notchState == .open || isHovering) && Defaults[.enableShadow])
+                                ? .black.opacity(0.7) : .clear, radius: Defaults[.cornerRadiusScaling] ? 6 : 4)
+                    }
                     .overlay(alignment: .top) {
                         Rectangle()
                             .fill(.black)
-                            .frame(height: 1)
+                            .frame(height: 2)
                             .padding(.horizontal, topCornerRadius)
                     }
-                    .shadow(
-                        color: ((vm.notchState == .open || isHovering) && Defaults[.enableShadow])
-                            ? .black.opacity(0.7) : .clear, radius: Defaults[.cornerRadiusScaling] ? 6 : 4
-                    )
                     .padding(
                         .bottom,
                         vm.effectiveClosedNotchHeight == 0 ? 10 : 0
                     )
                 
                 mainLayout
-                    .frame(height: vm.notchState == .open ? vm.notchSize.height : nil)
+                    .frame(height: vm.notchState == .open ? vm.notchSize.height : nil, alignment: .top)
                     .conditionalModifier(true) { view in
                         let openAnimation = Animation.spring(response: 0.42, dampingFraction: 0.8, blendDuration: 0)
                         let closeAnimation = Animation.spring(response: 0.45, dampingFraction: 1.0, blendDuration: 0)
@@ -134,6 +142,12 @@ struct ContentView: View {
                     .onTapGesture {
                         doOpen()
                     }
+                    .pageSwipe(enabled: horizontalPageSwipe && vm.notchState == .open && !vm.anyDropZoneTargeting && !ShelfSelectionModel.shared.isDragging, excludingTaskRegions: coordinator.currentView == .codex && codexTaskNavigation == "region") { step in
+                        let pages: [NotchViews] = Defaults[.boringShelf] ? [.home, .shelf, .codex] : [.home, .codex]
+                        guard let index = pages.firstIndex(of: coordinator.currentView) else { return }
+                        let next = max(0, min(pages.count - 1, index + step))
+                        withAnimation(.smooth) { coordinator.currentView = pages[next] }
+                    }
                     .conditionalModifier(Defaults[.enableGestures]) { view in
                         view
                             .panGesture(direction: .down) { translation, phase in
@@ -147,6 +161,7 @@ struct ContentView: View {
                             }
                     }
                     .onAppear {
+                        codexMonitor.start()
                         Task {
                             try? await Task.sleep(for: .seconds(1))
                             await MainActor.run {
@@ -166,12 +181,25 @@ struct ContentView: View {
                                 guard !Task.isCancelled else { return }
                                 await MainActor.run {
                                     if self.vm.notchState == .open && !self.isHovering && !self.vm.isBatteryPopoverActive && !SharingStateManager.shared.preventNotchClose {
-                                        self.vm.close()
+                                        self.closeAfterHover()
                                     }
                                 }
                             }
                         }
                     }
+                    .onReceive(NotificationCenter.default.publisher(for: .shelfDragDidFinish)) { _ in
+                        vm.dragDetectorTargeting = false
+                        vm.generalDropTargeting = false
+                        vm.dropZoneTargeting = false
+                        hoverTask?.cancel()
+                        hoverTask = Task { @MainActor in
+                            try? await Task.sleep(for: .milliseconds(150))
+                            guard !Task.isCancelled else { return }
+                            isHovering = vm.isMouseHovering()
+                            if vm.notchState == .open { closeAfterHover() }
+                        }
+                    }
+                    .onChange(of: codexState.reminderSequence) { showCodexReminder() }
                     .onChange(of: vm.notchState) { _, newState in
                         if newState == .closed && isHovering {
                             withAnimation {
@@ -187,7 +215,7 @@ struct ContentView: View {
                                 guard !Task.isCancelled else { return }
                                 await MainActor.run {
                                     if !self.vm.isBatteryPopoverActive && !self.isHovering && self.vm.notchState == .open && !SharingStateManager.shared.preventNotchClose {
-                                        self.vm.close()
+                                        self.closeAfterHover()
                                     }
                                 }
                             }
@@ -223,13 +251,23 @@ struct ContentView: View {
         .animation(.smooth, value: gestureProgress)
         .background(dragDetector)
         .environmentObject(vm)
+        .onReceive(codexMonitor.$notchState.removeDuplicates()) { state in
+            if codexState != state { codexState = state }
+            if state.retryPaused {
+                codexReminderTask?.cancel()
+                codexReminderUntil = .distantPast
+                if coordinator.currentView == .codex && vm.notchState == .open {
+                    hoverTask?.cancel()
+                    withAnimation(vm.animation) { vm.close() }
+                }
+            }
+        }
         .onChange(of: vm.anyDropZoneTargeting) { _, isTargeted in
             anyDropDebounceTask?.cancel()
 
             if isTargeted {
                 if vm.notchState == .closed {
-                    coordinator.currentView = .shelf
-                    doOpen()
+                    doOpen(preferredView: .shelf)
                 }
                 return
             }
@@ -245,7 +283,7 @@ struct ContentView: View {
 
                 vm.dropEvent = false
                 if !SharingStateManager.shared.preventNotchClose {
-                    vm.close()
+                    closeAfterHover()
                 }
             }
         }
@@ -253,7 +291,7 @@ struct ContentView: View {
 
     @ViewBuilder
     func NotchLayout() -> some View {
-        VStack(alignment: .leading) {
+        VStack(alignment: .leading, spacing: 8) {
             VStack(alignment: .leading) {
                 if coordinator.firstLaunch {
                     Spacer()
@@ -266,7 +304,20 @@ struct ContentView: View {
                     .padding(.top, 40)
                     Spacer()
                 } else {
-                    if coordinator.expandingView.type == .battery && coordinator.expandingView.show
+                    if vm.notchState == .closed && codexState.hasRelevantTasks && !musicManager.isPlaying && !vm.hideOnClosed {
+                        HStack(spacing: 0) {
+                            Image(systemName: "chevron.left.forwardslash.chevron.right")
+                                .font(.system(size: 10, weight: .semibold)).frame(width: 24)
+                            Color.clear.frame(width: vm.closedNotchSize.width)
+                            Circle().fill(!codexState.connected ? Color.gray : codexState.attentionCount > 0 ? Color.orange : codexState.hasRunning ? Color.blue : Color.green)
+                                .frame(width: 6, height: 6).frame(width: 24)
+                        }
+                        .foregroundStyle(.gray)
+                        .frame(height: vm.effectiveClosedNotchHeight)
+                        .onTapGesture {
+                            doOpen(preferredView: .codex)
+                        }
+                    } else if coordinator.expandingView.type == .battery && coordinator.expandingView.show
                         && vm.notchState == .closed && Defaults[.showPowerStatusNotifications]
                     {
                         HStack(spacing: 0) {
@@ -352,14 +403,19 @@ struct ContentView: View {
               }
               .zIndex(2)
             if vm.notchState == .open {
-                VStack {
+                VStack(alignment: .leading, spacing: 0) {
                     switch coordinator.currentView {
                     case .home:
                         NotchHomeView(albumArtNamespace: albumArtNamespace)
                     case .shelf:
                         ShelfView()
+                    case .codex:
+                        CodexView()
+                            // Match the native content area without changing the other pages' layout.
+                            .frame(height: max(0, openNotchSize.height - max(24, vm.effectiveClosedNotchHeight) - 20), alignment: .top)
                     }
                 }
+                .frame(maxWidth: .infinity, alignment: .leading)
                 .transition(
                     .scale(scale: 0.8, anchor: .top)
                     .combined(with: .opacity)
@@ -370,7 +426,14 @@ struct ContentView: View {
                 .opacity(gestureProgress != 0 ? 1.0 - min(abs(gestureProgress) * 0.1, 0.3) : 1.0)
             }
         }
-        .onDrop(of: [.fileURL, .url, .utf8PlainText, .plainText, .data], delegate: GeneralDropTargetDelegate(isTargeted: $vm.generalDropTargeting))
+         .onDrop(of: [ShelfInternalTransfer.type, .fileURL, .url, .utf8PlainText, .plainText, .data], delegate: GeneralDropTargetDelegate(
+            isTargeted: $vm.generalDropTargeting,
+            enabled: Defaults[.boringShelf] && coordinator.currentView == .shelf,
+            accept: { providers in
+                vm.dropEvent = true
+                let zone = UserDefaults.standard.string(forKey: "shelfActiveZone").flatMap(ShelfZone.init(rawValue:)) ?? .copy
+                return ShelfStateViewModel.shared.acceptDrop(providers, into: zone)
+            }))
     }
 
     @ViewBuilder
@@ -503,7 +566,7 @@ struct ContentView: View {
                 .contentShape(Rectangle())
         .onDrop(of: [.fileURL, .url, .utf8PlainText, .plainText, .data], isTargeted: $vm.dragDetectorTargeting) { providers in
             vm.dropEvent = true
-            ShelfStateViewModel.shared.load(providers)
+            ShelfStateViewModel.shared.load(providers, into: .copy)
             return true
         }
         } else {
@@ -511,9 +574,42 @@ struct ContentView: View {
         }
     }
 
-    private func doOpen() {
+    private func closeAfterHover() {
+        guard !vm.isMouseHovering(), !ShelfSelectionModel.shared.isDragging,
+              !vm.anyDropZoneTargeting, !vm.isBatteryPopoverActive,
+              !SharingStateManager.shared.preventNotchClose else { return }
+        guard coordinator.currentView != .codex || Date() >= codexReminderUntil else { return }
+        guard (NSApp.keyWindow as? CodexInputWindow)?.codexInputEnabled != true else { return }
+        vm.close()
+    }
+
+    private func showCodexReminder() {
+        // One display announces a shared event. Never interrupt a drag/share transaction.
+        guard vm.screenUUID == coordinator.selectedScreenUUID else { return }
+        codexReminderTask?.cancel()
+        codexReminderTask = Task { @MainActor in
+            while vm.anyDropZoneTargeting || ShelfSelectionModel.shared.isDragging || SharingStateManager.shared.preventNotchClose {
+                try? await Task.sleep(for: .milliseconds(300))
+                guard !Task.isCancelled else { return }
+            }
+            guard !Task.isCancelled, !codexState.retryPaused, codexMonitor.remindersEnabled else { return }
+            hoverTask?.cancel()
+            let duration: Double = codexMonitor.reminderNeedsAttention ? 12 : codexMonitor.completionReminderSeconds
+            codexReminderUntil = Date().addingTimeInterval(duration)
+            codexMonitor.beginReminderPresentation()
+            doOpen(preferredView: .codex)
+            try? await Task.sleep(for: .seconds(duration))
+            guard !Task.isCancelled else { return }
+            codexReminderUntil = .distantPast
+            if !vm.isMouseHovering() && !ShelfSelectionModel.shared.isDragging && coordinator.currentView == .codex && !vm.anyDropZoneTargeting && (NSApp.keyWindow as? CodexInputWindow)?.codexInputEnabled != true {
+                vm.close()
+            }
+        }
+    }
+
+    private func doOpen(preferredView: NotchViews? = nil) {
         withAnimation(animationSpring) {
-            vm.open()
+            vm.open(preferredView: preferredView)
         }
     }
 
@@ -558,7 +654,7 @@ struct ContentView: View {
                     }
                     
                     if self.vm.notchState == .open && !self.vm.isBatteryPopoverActive && !SharingStateManager.shared.preventNotchClose {
-                        self.vm.close()
+                        self.closeAfterHover()
                     }
                 }
             }
@@ -641,21 +737,21 @@ struct FullScreenDropDelegate: DropDelegate {
 
 struct GeneralDropTargetDelegate: DropDelegate {
     @Binding var isTargeted: Bool
+    let enabled: Bool
+    let accept: ([NSItemProvider]) -> Bool
+    private let types: [UTType] = [ShelfInternalTransfer.type, .fileURL, .url, .utf8PlainText, .plainText, .data]
 
-    func dropEntered(info: DropInfo) {
-        isTargeted = true
-    }
-
-    func dropExited(info: DropInfo) {
-        isTargeted = false
-    }
-
+    func validateDrop(info: DropInfo) -> Bool { enabled && info.hasItemsConforming(to: types) }
+    func dropEntered(info: DropInfo) { isTargeted = validateDrop(info: info) }
+    func dropExited(info: DropInfo) { isTargeted = false }
     func dropUpdated(info: DropInfo) -> DropProposal? {
-        return DropProposal(operation: .cancel)
+        // Staging never moves the source. Do not cancel the child shelf destinations.
+        DropProposal(operation: validateDrop(info: info) ? .copy : .cancel)
     }
-
     func performDrop(info: DropInfo) -> Bool {
-        return false
+        isTargeted = false
+        guard validateDrop(info: info) else { return false }
+        return accept(info.itemProviders(for: types))
     }
 }
 

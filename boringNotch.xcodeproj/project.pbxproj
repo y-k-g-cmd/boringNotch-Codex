@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		C0DE00000000000000000001 /* CodexSocketBridge.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE00000000000000000002 /* CodexSocketBridge.swift */; };
 		1100290C2E847E2800035A57 /* NSItemProvider+LoadHelpers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1100290B2E847E2800035A57 /* NSItemProvider+LoadHelpers.swift */; };
 		110029272E84FD4C00035A57 /* TemporaryFileStorageService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 110029262E84FD4C00035A57 /* TemporaryFileStorageService.swift */; };
 		1100292A2E8691B400035A57 /* FileShareView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 110029292E8691B400035A57 /* FileShareView.swift */; };
@@ -143,6 +144,12 @@
 		B1F747F92EC7E94000F841DB /* LottieView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1F747F82EC7E94000F841DB /* LottieView.swift */; };
 		B1FEB4992C7686630066EBBC /* PanGesture.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1FEB4982C7686630066EBBC /* PanGesture.swift */; };
 		F38DE6482D8243E7008B5C6D /* BatteryActivityManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = F38DE6472D8243E2008B5C6D /* BatteryActivityManager.swift */; };
+		F8B1B2503F8375A1AA4C06A4 /* ShelfZone.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5DA31F4EED36039678915E93 /* ShelfZone.swift */; };
+		D4917B969BA7458482C3415E /* ShelfInternalTransfer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 60EF569E1E9A48DA87078998 /* ShelfInternalTransfer.swift */; };
+		D59DDCCEB378697CD5AF0DA0 /* CodexState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 71A8B51D53DA380B19BB9BE3 /* CodexState.swift */; };
+		F8DD4C4EEC582081470FA469 /* CodexIPCTransport.swift in Sources */ = {isa = PBXBuildFile; fileRef = 66AE0EDD8E1BB54A6F883A97 /* CodexIPCTransport.swift */; };
+		11CF7E97335A6AA4890E4A9A /* CodexMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 40B80764F9963F6BEF61BB5E /* CodexMonitor.swift */; };
+		7B1DF4707ABBC60334102EF5 /* CodexView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D9CB6B074A329FEB47F06EB /* CodexView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -181,6 +188,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		C0DE00000000000000000002 /* CodexSocketBridge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = boringNotch/components/Codex/CodexSocketBridge.swift; sourceTree = SOURCE_ROOT; };
 		1100290B2E847E2800035A57 /* NSItemProvider+LoadHelpers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "NSItemProvider+LoadHelpers.swift"; sourceTree = "<group>"; };
 		110029262E84FD4C00035A57 /* TemporaryFileStorageService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TemporaryFileStorageService.swift; sourceTree = "<group>"; };
 		110029292E8691B400035A57 /* FileShareView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileShareView.swift; sourceTree = "<group>"; };
@@ -309,6 +317,12 @@
 		B1F747F82EC7E94000F841DB /* LottieView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LottieView.swift; sourceTree = "<group>"; };
 		B1FEB4982C7686630066EBBC /* PanGesture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PanGesture.swift; sourceTree = "<group>"; };
 		F38DE6472D8243E2008B5C6D /* BatteryActivityManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BatteryActivityManager.swift; sourceTree = "<group>"; };
+		5DA31F4EED36039678915E93 /* ShelfZone.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = boringNotch/components/Shelf/Models/ShelfZone.swift; sourceTree = SOURCE_ROOT; };
+		60EF569E1E9A48DA87078998 /* ShelfInternalTransfer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = boringNotch/components/Shelf/Models/ShelfInternalTransfer.swift; sourceTree = SOURCE_ROOT; };
+		71A8B51D53DA380B19BB9BE3 /* CodexState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = boringNotch/components/Codex/CodexState.swift; sourceTree = SOURCE_ROOT; };
+		66AE0EDD8E1BB54A6F883A97 /* CodexIPCTransport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = boringNotch/components/Codex/CodexIPCTransport.swift; sourceTree = SOURCE_ROOT; };
+		40B80764F9963F6BEF61BB5E /* CodexMonitor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = boringNotch/components/Codex/CodexMonitor.swift; sourceTree = SOURCE_ROOT; };
+		1D9CB6B074A329FEB47F06EB /* CodexView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = boringNotch/components/Codex/CodexView.swift; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -561,6 +575,13 @@
 		14CEF4142C5CAED300855D72 /* boringNotch */ = {
 			isa = PBXGroup;
 			children = (
+				5DA31F4EED36039678915E93 /* ShelfZone.swift */,
+				60EF569E1E9A48DA87078998 /* ShelfInternalTransfer.swift */,
+				71A8B51D53DA380B19BB9BE3 /* CodexState.swift */,
+				66AE0EDD8E1BB54A6F883A97 /* CodexIPCTransport.swift */,
+				C0DE00000000000000000002 /* CodexSocketBridge.swift */,
+				40B80764F9963F6BEF61BB5E /* CodexMonitor.swift */,
+				1D9CB6B074A329FEB47F06EB /* CodexView.swift */,
 				11F748672EC9AC9600F841DB /* XPCHelperClient */,
 				116398942DF5D6B40052E6AF /* Providers */,
 				14288DE22C6E016F00B9F80C /* observers */,
@@ -913,6 +934,13 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				F8B1B2503F8375A1AA4C06A4 /* ShelfZone.swift in Sources */,
+				D4917B969BA7458482C3415E /* ShelfInternalTransfer.swift in Sources */,
+				D59DDCCEB378697CD5AF0DA0 /* CodexState.swift in Sources */,
+				F8DD4C4EEC582081470FA469 /* CodexIPCTransport.swift in Sources */,
+				C0DE00000000000000000001 /* CodexSocketBridge.swift in Sources */,
+				11CF7E97335A6AA4890E4A9A /* CodexMonitor.swift in Sources */,
+				7B1DF4707ABBC60334102EF5 /* CodexView.swift in Sources */,
 				14C08BB92C8DE4B1000F8AA0 /* BoringCalendar.swift in Sources */,
 				5955950D2E900ED800C66711 /* ApplicationRelauncher.swift in Sources */,
 				1100292A2E8691B400035A57 /* FileShareView.swift in Sources */,
@@ -1057,8 +1085,8 @@
 				INFOPLIST_KEY_CFBundleDisplayName = BoringNotchXPCHelper;
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				MACOSX_DEPLOYMENT_TARGET = 15.5;
-				MARKETING_VERSION = 2.7.2;
-				PRODUCT_BUNDLE_IDENTIFIER = theboringteam.boringnotch.BoringNotchXPCHelper;
+				MARKETING_VERSION = 0.1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = io.github.y-k-g-cmd.boringnotchcodex.BoringNotchXPCHelper;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				REGISTER_APP_GROUPS = YES;
 				SKIP_INSTALL = YES;
@@ -1082,8 +1110,8 @@
 				INFOPLIST_KEY_CFBundleDisplayName = BoringNotchXPCHelper;
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				MACOSX_DEPLOYMENT_TARGET = 15.5;
-				MARKETING_VERSION = 2.7.2;
-				PRODUCT_BUNDLE_IDENTIFIER = theboringteam.boringnotch.BoringNotchXPCHelper;
+				MARKETING_VERSION = 0.1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = io.github.y-k-g-cmd.boringnotchcodex.BoringNotchXPCHelper;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				REGISTER_APP_GROUPS = YES;
 				SKIP_INSTALL = YES;
@@ -1224,12 +1252,12 @@
 				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES;
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ALLOW_ENTITLEMENTS_MODIFICATION = YES;
-				CODE_SIGN_ENTITLEMENTS = boringNotch/boringNotch.entitlements;
+				CODE_SIGN_ENTITLEMENTS = boringNotch/boringNotch.local.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "-";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 262;
+				CURRENT_PROJECT_VERSION = 271.15;
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_ASSET_PATHS = "\"boringNotch/Preview Content\"";
 				DEVELOPMENT_TEAM = "";
@@ -1242,7 +1270,7 @@
 				);
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = boringNotch/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = TheBoringNotch;
+				INFOPLIST_KEY_CFBundleDisplayName = "boringNotch Codex";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
 				INFOPLIST_KEY_LSBackgroundOnly = NO;
 				INFOPLIST_KEY_LSUIElement = YES;
@@ -1256,8 +1284,8 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = 2.7.2;
-				PRODUCT_BUNDLE_IDENTIFIER = theboringteam.boringnotch;
+				MARKETING_VERSION = 0.1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = io.github.y-k-g-cmd.boringnotchcodex;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -1278,12 +1306,12 @@
 				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES;
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ALLOW_ENTITLEMENTS_MODIFICATION = YES;
-				CODE_SIGN_ENTITLEMENTS = boringNotch/boringNotch.entitlements;
+				CODE_SIGN_ENTITLEMENTS = boringNotch/boringNotch.local.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "-";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 262;
+				CURRENT_PROJECT_VERSION = 271.15;
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_ASSET_PATHS = "\"boringNotch/Preview Content\"";
 				DEVELOPMENT_TEAM = "";
@@ -1295,7 +1323,7 @@
 				);
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = boringNotch/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = TheBoringNotch;
+				INFOPLIST_KEY_CFBundleDisplayName = "boringNotch Codex";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
 				INFOPLIST_KEY_LSBackgroundOnly = NO;
 				INFOPLIST_KEY_LSUIElement = YES;
@@ -1309,8 +1337,8 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = 2.7.2;
-				PRODUCT_BUNDLE_IDENTIFIER = theboringteam.boringnotch;
+				MARKETING_VERSION = 0.1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = io.github.y-k-g-cmd.boringnotchcodex;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_EMIT_LOC_STRINGS = YES;

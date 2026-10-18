@@ -22,7 +22,7 @@ struct DynamicNotchApp: App {
 
     init() {
         updaterController = SPUStandardUpdaterController(
-            startingUpdater: true, updaterDelegate: nil, userDriverDelegate: nil)
+            startingUpdater: ForkUpdateConfiguration.isEnabled, updaterDelegate: nil, userDriverDelegate: nil)
 
         // Initialize the settings window controller with the updater controller
         SettingsWindowController.shared.setUpdaterController(updaterController)
@@ -220,17 +220,17 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         guard let uuid = screen.displayUUID else { return }
         
         if Defaults[.showOnAllDisplays], let viewModel = viewModels[uuid] {
-            viewModel.open()
-            coordinator.currentView = .shelf
+            viewModel.open(preferredView: .shelf)
         } else if !Defaults[.showOnAllDisplays], let windowScreen = window?.screen, screen == windowScreen {
-            vm.open()
-            coordinator.currentView = .shelf
+            vm.open(preferredView: .shelf)
         }
     }
 
     private func createBoringNotchWindow(for screen: NSScreen, with viewModel: BoringViewModel) -> NSWindow {
         let rect = NSRect(x: 0, y: 0, width: windowSize.width, height: windowSize.height)
-        let styleMask: NSWindow.StyleMask = [.borderless, .nonactivatingPanel, .utilityWindow, .hudWindow]
+        // HUD/utility panel styles add an AppKit frame highlight on macOS 26.
+        // Use a truly borderless floating panel so black content reaches the screen edge.
+        let styleMask: NSWindow.StyleMask = [.borderless, .nonactivatingPanel]
         
         let window = BoringNotchSkyLightWindow(contentRect: rect, styleMask: styleMask, backing: .buffered, defer: false)
         
@@ -241,10 +241,13 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             window.disableSkyLight()
         }
 
-        window.contentView = NSHostingView(
+        let hostingView = NSHostingView(
             rootView: ContentView()
                 .environmentObject(viewModel)
+                .ignoresSafeArea()
         )
+        hostingView.safeAreaRegions = []
+        window.contentView = hostingView
 
         window.orderFrontRegardless()
         NotchSpaceManager.shared.notchSpace.windows.insert(window)
@@ -268,11 +271,11 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         }
 
         let screenFrame = screen.frame
-        window.setFrameOrigin(
-            NSPoint(
-                x: screenFrame.origin.x + (screenFrame.width / 2) - window.frame.width / 2,
-                y: screenFrame.origin.y + screenFrame.height - window.frame.height
-            ))
+        let scale = screen.backingScaleFactor
+        window.setFrameOrigin(NSPoint(
+            x: ((screenFrame.midX - window.frame.width / 2) * scale).rounded() / scale,
+            y: ((screenFrame.maxY - window.frame.height) * scale).rounded() / scale
+        ))
         window.alphaValue = 1
     }
 

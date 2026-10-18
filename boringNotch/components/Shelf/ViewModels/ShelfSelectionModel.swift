@@ -77,11 +77,23 @@ final class ShelfSelectionModel: ObservableObject {
 
     @Published private(set) var isDragging: Bool = false
 
+    private(set) var dragToken: UUID?
+    private(set) var draggedIDs: Set<UUID> = []
+
+    func prepareDrag(token: UUID, ids: Set<UUID>) {
+        dragToken = token
+        draggedIDs = ids
+    }
+
     func beginDrag() {
         isDragging = true
     }
 
     func endDrag() {
+        let wasDragging = isDragging
         isDragging = false
+        dragToken = nil
+        draggedIDs.removeAll()
+        if wasDragging { NotificationCenter.default.post(name: .shelfDragDidFinish, object: nil) }
     }
 }

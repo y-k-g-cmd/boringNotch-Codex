@@ -39,18 +39,18 @@ struct NotchShape: Shape {
         path.move(
             to: CGPoint(
                 x: rect.minX,
-                y: rect.minY
+                y: rect.minY - 1
             )
         )
 
         path.addQuadCurve(
             to: CGPoint(
                 x: rect.minX + topCornerRadius,
-                y: rect.minY + topCornerRadius
+                y: rect.minY - 1 + topCornerRadius
             ),
             control: CGPoint(
                 x: rect.minX + topCornerRadius,
-                y: rect.minY
+                y: rect.minY - 1
             )
         )
 
@@ -93,25 +93,25 @@ struct NotchShape: Shape {
         path.addLine(
             to: CGPoint(
                 x: rect.maxX - topCornerRadius,
-                y: rect.minY + topCornerRadius
+                y: rect.minY - 1 + topCornerRadius
             )
         )
 
         path.addQuadCurve(
             to: CGPoint(
                 x: rect.maxX,
-                y: rect.minY
+                y: rect.minY - 1
             ),
             control: CGPoint(
                 x: rect.maxX - topCornerRadius,
-                y: rect.minY
+                y: rect.minY - 1
             )
         )
 
         path.addLine(
             to: CGPoint(
                 x: rect.minX,
-                y: rect.minY
+                y: rect.minY - 1
             )
         )
 

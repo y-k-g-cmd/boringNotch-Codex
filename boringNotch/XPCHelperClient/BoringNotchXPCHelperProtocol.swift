@@ -9,6 +9,8 @@ import Foundation
 
 /// The protocol that this service will vend as its API. This protocol will also need to be visible to the process hosting the service.
 @objc protocol BoringNotchXPCHelperProtocol {
+    // Connect only to the current user's fixed Codex status socket.
+    func openCodexStatusSocket(with reply: @escaping (FileHandle?, Int32) -> Void)
     func isAccessibilityAuthorized(with reply: @escaping (Bool) -> Void)
     func requestAccessibilityAuthorization()
     func ensureAccessibilityAuthorization(_ promptIfNeeded: Bool, with reply: @escaping (Bool) -> Void)
@@ -21,4 +23,3 @@ import Foundation
     func currentScreenBrightness(with reply: @escaping (NSNumber?) -> Void)
     func setScreenBrightness(_ value: Float, with reply: @escaping (Bool) -> Void)
 }
-

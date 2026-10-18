@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rss version="2.0" xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle">
+  <channel>
+    <title>boringNotch Codex updates</title>
+    <link>https://github.com/y-k-g-cmd/boringNotch-Codex</link>
+    <description>Empty beta channel. No update release is published.</description>
+    <language>zh-CN</language>
+  </channel>
+</rss>

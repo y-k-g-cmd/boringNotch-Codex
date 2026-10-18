@@ -100,7 +100,7 @@ final class ShelfItemViewModel: ObservableObject {
     func handleClick(event: NSEvent, view: NSView) {
         let flags = event.modifierFlags
         if flags.contains(.shift) {
-            selection.shiftSelect(to: item, in: ShelfStateViewModel.shared.items)
+            selection.shiftSelect(to: item, in: ShelfStateViewModel.shared.items(in: item.zone))
         } else if flags.contains(.command) {
             selection.toggle(item)
         } else if flags.contains(.control) {

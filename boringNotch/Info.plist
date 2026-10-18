@@ -11,13 +11,17 @@
 	<true/>
 	<key>SUEnableInstallerLauncherService</key>
 	<true/>
-	<key>SUFeedURL</key>
-	<string>https://TheBoredTeam.github.io/boring.notch/appcast.xml</string>
-	<key>SUPublicEDKey</key>
-	<string>B1Y47t8C/v8ImurYA+9arEsuCrpxwJSviekiflMElbI=</string>
 	<key>UTImportedTypeDeclarations</key>
 	<array>
 		<dict/>
 	</array>
+	<key>ForkUpdatesEnabled</key>
+	<false/>
+	<key>ForkRepositoryURL</key>
+	<string>https://github.com/y-k-g-cmd/boringNotch-Codex</string>
+	<key>SUAutomaticallyUpdate</key>
+	<false/>
+	<key>SUEnableAutomaticChecks</key>
+	<false/>
 </dict>
 </plist>

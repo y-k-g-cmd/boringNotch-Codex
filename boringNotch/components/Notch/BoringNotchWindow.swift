@@ -7,7 +7,8 @@
 
 import Cocoa
 
-class BoringNotchWindow: NSPanel {
+class BoringNotchWindow: NSPanel, CodexInputWindow {
+    var codexInputEnabled = false
     override init(
         contentRect: NSRect,
         styleMask: NSWindow.StyleMask,
@@ -22,6 +23,7 @@ class BoringNotchWindow: NSPanel {
         )
         
         isFloatingPanel = true
+        hidesOnDeactivate = false
         isOpaque = false
         titleVisibility = .hidden
         titlebarAppearsTransparent = true
@@ -41,7 +43,7 @@ class BoringNotchWindow: NSPanel {
     }
     
     override var canBecomeKey: Bool {
-        false
+        codexInputEnabled
     }
     
     override var canBecomeMain: Bool {

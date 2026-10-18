@@ -1,0 +1,29 @@
+name: Fork source checks
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  source:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - run: python3 scripts/check-public.py
+  macos:
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - run: xcodebuild -version
+      - run: bash scripts/check-update-config.sh
+      - run: bash scripts/check-core.sh
+      - run: bash scripts/check-interactions.sh
+      - run: bash scripts/check-stream.sh
+      - run: bash scripts/check-shelf.sh
+      - run: bash scripts/build-local.sh

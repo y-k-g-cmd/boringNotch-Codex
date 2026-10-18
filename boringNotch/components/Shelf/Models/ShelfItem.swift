@@ -53,17 +53,30 @@ struct ShelfItem: Identifiable, Codable, Equatable, Sendable {
     let id: UUID
     var kind: ShelfItemKind
     var isTemporary: Bool
-    init(id: UUID = UUID(), kind: ShelfItemKind, isTemporary: Bool = false) {
+    var zone: ShelfZone
+    init(id: UUID = UUID(), kind: ShelfItemKind, isTemporary: Bool = false, zone: ShelfZone = .copy) {
         self.id = id
         self.kind = kind
         self.isTemporary = isTemporary
+        self.zone = zone
     }
     
+    enum CodingKeys: String, CodingKey { case id, kind, isTemporary, zone }
+
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        id = try c.decode(UUID.self, forKey: .id)
+        kind = try c.decode(ShelfItemKind.self, forKey: .kind)
+        isTemporary = try c.decodeIfPresent(Bool.self, forKey: .isTemporary) ?? false
+        // Existing shelves migrate to copy, so upgrading cannot move original files.
+        zone = try c.decodeIfPresent(ShelfZone.self, forKey: .zone) ?? .copy
+    }
+
     var displayName: String {
         switch kind {
         case .file(let bookmarkData):
             let bookmark = Bookmark(data: bookmarkData)
-            guard let resolvedURL = bookmark.resolveURL() else { return "" }
+            guard let resolvedURL = bookmark.resolveURL() else { return "文件暂不可用" }
             
             // Check for stored data files (text blocks, weblocs, etc.) to provide friendly names
             if resolvedURL.pathExtension.lowercased() == "json" && resolvedURL.path.contains("TextBlocks") {
@@ -136,7 +149,7 @@ struct ShelfItem: Identifiable, Codable, Equatable, Sendable {
         if let resolvedURL = ShelfStateViewModel.shared.resolveFileURL(for: self) {
             return NSWorkspace.shared.icon(forFile: resolvedURL.path)
         }
-        return NSImage()
+        return NSImage(systemSymbolName: "doc.badge.exclamationmark", accessibilityDescription: "文件暂不可用") ?? NSImage()
     }
     
 
@@ -224,5 +237,12 @@ private extension ShelfItem {
             return (url, bookmark.refreshedData ?? bookmarkData)
         }
         return nil
+    }
+}
+
+extension ShelfItem {
+    var canMoveOriginal: Bool {
+        if case .file = kind { return !isTemporary }
+        return false
     }
 }

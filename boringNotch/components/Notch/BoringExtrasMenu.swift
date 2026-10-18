@@ -56,7 +56,7 @@ struct BoringExtrasMenu : View {
                 NSWorkspace.shared.open(sponsorPage)
             },
             icon: Image(systemName: "heart.fill"),
-            title: "Love Us"
+            title: "Support upstream"
         )
     }
     

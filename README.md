@@ -1,191 +1,46 @@
-<h1 align="center">
-  <br>
-  <a href="http://thebored.name"><img src="https://framerusercontent.com/images/RFK4vs0kn8pRMuOO58JeyoemXA.png?scale-down-to=256" alt="Boring Notch" width="150"></a>
-  <br>
-  Boring Notch
-  <br>
-</h1>
+# boringNotch Codex
 
+基于 [TheBoredTeam/boring.notch](https://github.com/TheBoredTeam/boring.notch) 的非官方独立 fork，保留原有媒体、日历和文件架体验，增加 Codex 任务提醒及双区收纳。
 
-<p align="center">
-  <a title="Crowdin" target="_blank" href="https://crowdin.com/project/boring-notch"><img src="https://badges.crowdin.net/boring-notch/localized.svg"></a>
-  <img src="https://github.com/TheBoredTeam/boring.notch/actions/workflows/cicd.yml/badge.svg" alt="TheBoringNotch Build & Test" style="margin-right: 10px;" />
-  <a href="https://discord.gg/c8JXA7qrPm">
-    <img src="https://dcbadge.limes.pink/api/server/https://discord.gg/c8JXA7qrPm?style=flat" alt="Discord Badge" />
-  </a>
-  <a href="ttps://ko-fi.com/brandonhimpfen">
-    <img src="https://srv-cdn.himpfen.io/badges/kofi/kofi-flat.svg" alt="Ko-Fi" />
-  </a>
-</p>
+**状态：Beta 源码。项目仓库：https://github.com/y-k-g-cmd/boringNotch-Codex 。尚未发布正式安装包。**
 
-<!--Welcome to **Boring.Notch**, the coolest way to make your MacBook's notch the star of the show! Forget about those boring status bars—our notch turns into a dynamic music control center, complete with a snazzy visualizer and all the music controls you need. It's like having a mini concert right at the top of your screen! -->
+维护方针：固定在上游 v2.7.3 基础独立维护，不自动跟进上游 2.8、RC 或 Nightly。自动更新未来仅服务于本 fork 自己发布的版本。
 
-Say hello to **Boring Notch**, the coolest way to make your MacBook’s notch the star of the show! Say goodbye to boring status bars: with Boring Notch, your notch transforms into a dynamic music control center, complete with a vibrant visualizer and all the essential music controls you need. But that’s just the start! Boring Notch also offers calendar integration, a handy file shelf with AirDrop support, a complete MacOS HUD replacement and more!
+## 功能
 
-<p align="center">
-  <img src="https://github.com/user-attachments/assets/2d5f69c1-6e7b-4bc2-a6f1-bb9e27cf88a8" alt="Demo GIF" />
-</p>
+- Codex 正在运行、完成和等待人工操作的状态卡片；任务跳转、已识别请求的选择与提交。
+- 完成提醒下滑展开、任务边框提示，展示时长可调；连接失败五分钟后停止自动尝试。
+- 复制区和剪切区，可拖到区域入口切换收纳方式。内部切区只修改记录，不操作原文件。
+- 双指切页、任务浏览区域划分，中英文设置、区域顺序和隔空投送显示开关。
 
-<!--https://github.com/user-attachments/assets/19b87973-4b3a-4853-b532-7e82d1d6b040-->
----
-<!--## Table of Contents
-- [Installation](#installation)
-- [Usage](#usage)
-- [Roadmap](#-roadmap)
-- [Building from Source](#building-from-source)
-- [Contributing](#-contributing)
-- [Join our Discord Server](#join-our-discord-server)
-- [Star History](#star-history)
-- [Buy us a coffee!](#buy-us-a-coffee)
-- [Acknowledgments](#-acknowledgments)-->
+不支持在刘海内自由输入新的后续指令；不接入 Claude Code、WorkBuddy 或额度查询。
 
-## Installation
+## 构建与安装
 
-**System Requirements:**  
-- macOS **14 Sonoma** or later  
-- Apple Silicon or Intel Mac
+见 [BUILDING.md](BUILDING.md)。当前源码来自本地定制版 271.15；公开候选版显示版本为 0.1.0，构建号保留 271.15。尚未发布经过 Developer ID 签名和 Apple 公证的安装包。
 
----
-> [!IMPORTANT]
-> We don't have an Apple Developer account yet. The application will show a popup on first launch that the app is from an unidentified developer.
-> 1. Click **OK** to close the popup.
-> 2. Open **System Settings** > **Privacy & Security**.
-> 3. Scroll down and click **Open Anyway** next to the warning about the app.
-> 4. Confirm your choice if prompted.
->
-> You only need to do this once.
+首次运行时按需要授权 Codex 数据目录、文件夹及媒体等功能。新 fork 使用独立 Bundle ID，原本本地版的设置和安全书签不会自动迁移。
 
+## Codex 兼容性与隐私
 
-### Option 1: Download and Install Manually
-<a href="https://github.com/TheBoredTeam/boring.notch/releases/latest/download/boringNotch.dmg" target="_self"><img width="200" src="https://github.com/user-attachments/assets/e3179be1-8416-4b8a-b417-743e1ecc67d6" alt="Download for macOS" /></a>
+Codex 接入使用桌面客户端的非公开本地 IPC，并读取授权目录中的会话索引。它不是 OpenAI 官方 API 集成，客户端更新可能使它失效。未承诺任意 Codex 版本兼容。
 
----
+目录选择授权范围覆盖整个被选目录；代码不读取 `auth.json`。任务名称、摘要等数据在本机展示；请勿把真实会话数据放进问题反馈或截图。请求操作由用户主动点击提交，不自动代选或审批。详见 [PRIVACY.md](PRIVACY.md)。
 
-### Option 2: Install via Homebrew
+## 验证状态
 
-You can also install the app using [Homebrew](https://brew.sh):
+本地 271.15：Finder 拖入、区域入口高亮及内部切区已由用户实测；异步选择题提交曾验证。源会话路由、过期请求拒绝、流式刷新和重连有回归检查。
 
-```bash
-brew install --cask TheBoredTeam/boring-notch/boring-notch --no-quarantine
-```
+多文件剪切、目标完整性、取消拖动、不同 Codex 版本及多显示器仍需补充实测。公开候选版已单独完成依赖解析、完整 Xcode Archive 与严格签名检查；尚未进行新身份下的运行时 GUI 和首次授权测试。详见 [发布准备记录](docs/PUBLICATION_STATUS.md)。
 
-## Usage
+## 自动更新
 
-- Launch the app, and voilà—your notch is now the coolest part of your screen.
-- Hover over the notch to see it expand and reveal all its secrets.
-- Use the controls to manage your music like a rockstar.
-- Click the star in your menu bar to customize your notch to your heart's content.
+当前关闭，已移除上游 appcast 和公钥。计划由本项目 GitHub Pages 提供 `appcast.xml`，GitHub Releases 托管下载包；自己的 Sparkle 更新签名密钥配置完成并实际测试后再开启。详见 [更新发布指南](docs/UPDATES.md)。
 
-## 📋 Roadmap
-- [x] Playback live activity 🎧
-- [x] Calendar integration 📆
-- [x] Reminders integration ☑️
-- [x] Mirror 📷
-- [x] Charging indicator and current percentage 🔋
-- [x] Customizable gesture control 👆🏻
-- [x] Shelf functionality with AirDrop 📚
-- [x] Notch sizing customization, finetuning on different display sizes 🖥️
-- [x] System HUD replacements (volume, brightness, backlight) 🎚️💡⌨️
-- [ ] Bluetooth Live Activity (connect/disconnect for bluetooth devices) 
-- [ ] Weather integration ⛅️
-- [ ] Customizable Layout options 🛠️
-- [ ] Lock Screen Widgets 🔒
-- [ ] Extension system 🧩
-- [ ] Notifications (under consideration) 🔔
-<!-- - [ ] Clipboard history manager 📌 `Extension` -->
-<!-- - [ ] Download indicator of different browsers (Safari, Chromium browsers, Firefox) 🌍 `Extension`-->
-<!-- - [ ] Customizable function buttons 🎛️ -->
-<!-- - [ ] App switcher 🪄 -->
+## 来源、许可证与致谢
 
-<!-- ## 🧩 Extensions
-> [!NOTE]
-> We’re hard at work on some awesome extensions! Stay tuned, and we’ll keep you updated as soon as they’re released. -->
+基于上游 v2.7.3 / `16b0f11f51c79d42e27c10d77fd9e53c11410fdb` 修改。不是上游官方版本，也不代表 OpenAI 或 Pinland。Pinland 仅提供交互设计参考，没有包含其代码、图标、截图或宣传素材。
 
-## Building from Source
+本衍生项目沿用 [GPLv3](LICENSE)，保留原作者版权和 [第三方许可证](THIRD_PARTY_LICENSES)。原说明保存在 [UPSTREAM_README.md](docs/UPSTREAM_README.md)。媒体框架等组件仍按各自许可证分发，详情见 [第三方说明](docs/THIRD_PARTY.md)。
 
-### Prerequisites
-
-- **macOS 14 or later**: If you’re not on the latest macOS, we might need to send a search party.
-- **Xcode 16 or later**: This is where the magic happens, so make sure it’s up-to-date.
-
-### Installation
-
-1. **Clone the Repository**:
-   ```bash
-   git clone https://github.com/TheBoredTeam/boring.notch.git
-   cd boring.notch
-   ```
-
-2. **Open the Project in Xcode**:
-   ```bash
-   open boringNotch.xcodeproj
-   ```
-
-3. **Build and Run**:
-    - Click the "Run" button or press `Cmd + R`. Watch the magic unfold!
-
-## 🤝 Contributing
-
-We’re all about good vibes and awesome contributions! Here’s how you can join the fun:
-
-1. **Fork the Repo**: Click that shiny "Fork" button and make your own version.
-2. **Clone Your Fork**:
-   ```bash
-   git clone https://github.com/{your-name}/boring.notch.git
-   # Replace {your-name} with your GitHub username
-   ```
-3. **Make sure to use the `dev` branch as base.**
-4. **Create a New Branch**:
-   ```bash
-   git checkout -b feature/{your-feature-name}
-   # Replace {your-feature-name} with a descriptive and concise name for your branch
-   # It is best practice to use only alphanumeric characters, write words in lowercase
-   # and seperate words with a single hyphen
-   ```
-5. **Make Your Changes**: Add that feature or fix that bug.
-6. **Commit Your Changes**:
-   ```bash
-   git commit -m "insert descriptive message here"
-   ```
-7. **Push to Your Fork**:
-   ```bash
-   git push origin feature/{your-feature-name}
-   # Remember to replace {your-feature-name} with the name you chose
-   ```
-8. **Create a Pull Request**: Head to the original repository and click on "New Pull Request." Fill in the required details, **make sure the base branch is set to `dev`**, and submit your PR. Let’s see what you’ve got!
-
-## Join our Discord Server
-
-<a href="https://discord.gg/GvYcYpAKTu" target="_blank"><img src="https://iili.io/28m3GHv.png" alt="Join The Boring Server!" style="height: 60px !important;width: 217px !important;" ></a>
-
-## Star History
-
-<a href="https://www.star-history.com/#TheBoredTeam/boring.notch&Timeline">
- <picture>
-   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=TheBoredTeam/boring.notch&type=Timeline&theme=dark" />
-   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=TheBoredTeam/boring.notch&type=Timeline" />
-   <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=TheBoredTeam/boring.notch&type=Timeline" />
- </picture>
-</a>
-
-## Support us on Ko-fi!
-<!-- <a href="https://www.buymeacoffee.com/jfxh67wvfxq" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-red.png" alt="Buy Me A Coffee" style="height: 60px !important;width: 217px !important;" ></a> -->
-<a href="https://www.ko-fi.com/alexander5015" target="_blank"><img src="https://github.com/user-attachments/assets//a76175ef-7e93-475a-8b67-4922ba5964c2" alt="Support us on Ko-fi" style="height: 70px !important;width: 346px !important;" ></a>
-
-## 🎉 Acknowledgments
-
-We would like to express our gratitude to the authors and maintainers of the open-source projects that made this possible. 
-
-## Notable Projects
-- **[MediaRemoteAdapter](https://github.com/ungive/mediaremote-adapter)** –  An open-source project that allowed us to use the Now Playing source in macOS 15.4+
-- **[NotchDrop](https://github.com/Lakr233/NotchDrop)** – An open-source project that has been instrumental in developing the first version of the "Shelf" feature in Boring Notch.
-
-For a full list of licenses and attributions, please see the [Third-Party Licenses](./THIRD_PARTY_LICENSES.md) file.
-
-### Icon credits: [@maxtron95](https://github.com/maxtron95)
-### Website credits: [@himanshhhhuv](https://github.com/himanshhhhuv)
-
-- **SwiftUI**: For making us look like coding wizards.
-- **You**: For being awesome and checking out **boring.notch**!
-
-
+见 [CHANGELOG.md](CHANGELOG.md)、[CONTRIBUTING.md](CONTRIBUTING.md) 与 [SECURITY.md](SECURITY.md)。

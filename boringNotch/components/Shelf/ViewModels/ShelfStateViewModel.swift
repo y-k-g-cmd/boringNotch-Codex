@@ -16,12 +16,15 @@ final class ShelfStateViewModel: ObservableObject {
     }
 
     @Published var isLoading: Bool = false
+    @Published private(set) var importMessage: String?
+    @Published private(set) var importFailed = false
 
     var isEmpty: Bool { items.isEmpty }
 
     // Queue for deferred bookmark updates to avoid publishing during view updates
     private var pendingBookmarkUpdates: [ShelfItem.ID: Data] = [:]
     private var updateTask: Task<Void, Never>?
+    private var importFeedbackTask: Task<Void, Never>?
 
     private init() {
         items = ShelfPersistenceService.shared.load()
@@ -44,6 +47,7 @@ final class ShelfStateViewModel: ObservableObject {
     }
 
     func remove(_ item: ShelfItem) {
+        clearImportFeedback()
         item.cleanupStoredData()
         items.removeAll { $0.id == item.id }
     }
@@ -77,36 +81,117 @@ final class ShelfStateViewModel: ObservableObject {
     }
 
 
-    func load(_ providers: [NSItemProvider]) {
+    func items(in zone: ShelfZone) -> [ShelfItem] { items.filter { $0.zone == zone } }
+
+    func setZone(_ zone: ShelfZone, for ids: Set<UUID>) {
+        items = items.map { item in
+            var item = item
+            if ids.contains(item.id), zone == .copy || item.canMoveOriginal {
+                item.zone = zone
+            }
+            return item
+        }
+        ShelfSelectionModel.shared.clear()
+    }
+
+    @discardableResult
+    func transfer(_ ids: Set<UUID>, into zone: ShelfZone) -> Bool {
+        let live = items.filter { ids.contains($0.id) }
+        guard !ids.isEmpty, live.count == ids.count else { return false }
+        clearImportFeedback()
+        guard zone == .copy || live.allSatisfy(\.canMoveOriginal) else {
+            importFailed = true
+            importMessage = "剪切区只接收原始文件或文件夹"
+            return false
+        }
+        setZone(zone, for: ids)
+        return true
+    }
+
+    @discardableResult
+    func acceptDrop(_ providers: [NSItemProvider], into zone: ShelfZone) -> Bool {
+        guard !providers.isEmpty else { return false }
+        let selection = ShelfSelectionModel.shared
+        if providers.contains(where: { $0.hasItemConformingToTypeIdentifier(ShelfInternalTransfer.type.identifier) }) {
+            guard selection.isDragging, let token = selection.dragToken else { return false }
+            let router = ShelfInternalDropRouter.shared
+            router.update(at: NSEvent.mouseLocation)
+            if router.hasTarget {
+                return router.finish(at: NSEvent.mouseLocation, token: token, ids: selection.draggedIDs)
+            }
+            // Capture the active session before AppKit calls the source's ended callback.
+            let allowed = selection.draggedIDs
+            Task { [weak self] in
+                guard let ids = await ShelfInternalTransfer.loadIDs(from: providers, token: token, allowed: allowed), let self else { return }
+                let live = self.items.filter { ids.contains($0.id) }
+                guard live.count == ids.count else { return }
+                clearImportFeedback()
+                guard zone == .copy || live.allSatisfy(\.canMoveOriginal) else {
+                    importFailed = true
+                    importMessage = "剪切区只接收原始文件或文件夹"
+                    return
+                }
+                setZone(zone, for: ids)
+            }
+            return true
+        }
+        guard !selection.isDragging else { return false }
+        load(providers, into: zone)
+        return true
+    }
+
+    func load(_ providers: [NSItemProvider], into zone: ShelfZone = .copy) {
         guard !providers.isEmpty else { return }
+        clearImportFeedback()
         isLoading = true
+        importMessage = "正在收纳…"
+        importFailed = false
         Task { [weak self] in
-            let dropped = await ShelfDropService.items(from: providers)
+            let result = await ShelfDropService.importItems(from: providers)
+            let dropped = result.items
             await MainActor.run {
-                self?.add(dropped)
+                let accepted = dropped.compactMap { item -> ShelfItem? in
+                    guard zone == .copy || item.canMoveOriginal else { return nil }
+                    var item = item
+                    item.zone = zone
+                    return item
+                }
+                // Re-dropping a file into the other zone changes its intended operation.
+                let keys = Set(accepted.map(\.identityKey))
+                if let self {
+                    let ids = Set(self.items.filter { keys.contains($0.identityKey) }.map(\.id))
+                    self.setZone(zone, for: ids)
+                    self.add(accepted)
+                }
                 self?.isLoading = false
+                let failures = result.failures.count + dropped.count - accepted.count
+                self?.importFailed = failures > 0
+                if failures > 0 {
+                    self?.importMessage = "已收纳 \(accepted.count) 项，\(failures) 项失败：" + (result.failures.first ?? "剪切区只接收原始文件或文件夹")
+                } else {
+                    self?.importMessage = "本次已收纳 \(accepted.count) 项"
+                    self?.importFeedbackTask = Task { @MainActor [weak self] in
+                        try? await Task.sleep(for: .seconds(3))
+                        guard !Task.isCancelled else { return }
+                        self?.importMessage = nil
+                    }
+                }
             }
         }
     }
 
-    func cleanupInvalidItems() {
-        Task { [weak self] in
-            guard let self else { return }
-            var keep: [ShelfItem] = []
-            for item in self.items {
-                switch item.kind {
-                case .file(let data):
-                    let bookmark = Bookmark(data: data)
-                    if await bookmark.validate() {
-                        keep.append(item)
-                    } else {
-                        item.cleanupStoredData()
-                    }
-                default:
-                    keep.append(item)
-                }
-            }
-            await MainActor.run { self.items = keep }
+    private func clearImportFeedback() {
+        importFeedbackTask?.cancel()
+        importFeedbackTask = nil
+        importMessage = nil
+        importFailed = false
+    }
+
+    func refreshBookmarks() {
+        // An unavailable bookmark may need permission again after a custom build.
+        // Keep the record so a temporary access failure cannot erase the user's shelf.
+        for item in items {
+            if case .file = item.kind { _ = resolveFileURL(for: item) }
         }
     }
 

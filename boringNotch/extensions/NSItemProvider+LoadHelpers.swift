@@ -17,6 +17,34 @@ extension NSItemProvider {
     }
 
     
+    /// Make the persistent grant inside the provider callback while its drag grant is alive.
+    func extractFileBookmark() async throws -> Data? {
+        guard hasItemConformingToTypeIdentifier(UTType.fileURL.identifier) else { return nil }
+        return try await withCheckedThrowingContinuation { continuation in
+            loadItem(forTypeIdentifier: UTType.fileURL.identifier, options: nil) { value, error in
+                if let error { continuation.resume(throwing: error); return }
+                guard let url = Self.fileURL(from: value) else {
+                    continuation.resume(throwing: CocoaError(.fileReadUnsupportedScheme)); return
+                }
+                do { continuation.resume(returning: try Bookmark(url: url).data) }
+                catch { continuation.resume(throwing: error) }
+            }
+        }
+    }
+
+    static func fileURL(from value: NSSecureCoding?) -> URL? {
+        if let url = value as? URL { return url.isFileURL ? url : nil }
+        let string: String?
+        if let data = value as? Data { string = String(data: data, encoding: .utf8) }
+        else { string = value as? String }
+        if let string = string?.trimmingCharacters(in: .whitespacesAndNewlines.union(.controlCharacters)) {
+            if string.hasPrefix("/") { return URL(fileURLWithPath: string) }
+            if let url = URL(string: string), url.isFileURL { return url }
+        }
+        if let data = value as? Data { return Bookmark(data: data).resolveURL() }
+        return nil
+    }
+
     /// Detects if this is a file dragged from the filesystem
     func extractFileURL() async -> URL? {
         if hasItemConformingToTypeIdentifier(UTType.fileURL.identifier) {

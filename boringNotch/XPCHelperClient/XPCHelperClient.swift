@@ -5,7 +5,7 @@ import AsyncXPCConnection
 final class XPCHelperClient {
     nonisolated static let shared = XPCHelperClient()
     
-    private let serviceName = "theboringteam.boringnotch.BoringNotchXPCHelper"
+    private let serviceName = "\(Bundle.main.bundleIdentifier ?? "io.github.y-k-g-cmd.boringnotchcodex").BoringNotchXPCHelper"
     
     private var remoteService: RemoteXPCService<BoringNotchXPCHelperProtocol>?
     private var connection: NSXPCConnection?

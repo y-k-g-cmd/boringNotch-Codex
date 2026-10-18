@@ -30,7 +30,7 @@ struct CheckForUpdatesView: View {
     
     var body: some View {
         Button("Check for Updates…", action: updater.checkForUpdates)
-            .disabled(!checkForUpdatesViewModel.canCheckForUpdates)
+            .disabled(!ForkUpdateConfiguration.isEnabled || !checkForUpdatesViewModel.canCheckForUpdates)
     }
 }
 
@@ -49,15 +49,21 @@ struct UpdaterSettingsView: View {
     var body: some View {
         Section {
             Toggle("Automatically check for updates", isOn: $automaticallyChecksForUpdates)
+                .disabled(!ForkUpdateConfiguration.isEnabled)
                 .onChange(of: automaticallyChecksForUpdates) { _, newValue in
                     updater.automaticallyChecksForUpdates = newValue
                 }
             
             Toggle("Automatically download updates", isOn: $automaticallyDownloadsUpdates)
-                .disabled(!automaticallyChecksForUpdates)
+                .disabled(!ForkUpdateConfiguration.isEnabled || !automaticallyChecksForUpdates)
                 .onChange(of: automaticallyDownloadsUpdates) { _, newValue in
                     updater.automaticallyDownloadsUpdates = newValue
                 }
+            if !ForkUpdateConfiguration.isEnabled {
+                Text("此测试版尚未启用自动更新，请前往本项目 GitHub Releases 查看版本。")
+                    .font(.caption).foregroundStyle(.secondary)
+                Link("GitHub Releases", destination: productPage.appendingPathComponent("releases"))
+            }
         } header: {
             HStack {
                 Text("Software updates")

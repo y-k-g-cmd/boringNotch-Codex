@@ -595,8 +595,8 @@
         },
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "%.1fs"
+            "state" : "translated",
+            "value" : "%.1f 秒"
           }
         }
       }
@@ -697,6 +697,38 @@
           "stringUnit" : {
             "state" : "needs_review",
             "value" : "%@"
+          }
+        }
+      }
+    },
+    "%@，%@，在 Codex 中打开" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@, %2$@, open in Codex"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@，%2$@，在 Codex 中打开"
+          }
+        }
+      }
+    },
+    "%@，%lld 项" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@, %2$lld items"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@，%2$lld 项"
           }
         }
       }
@@ -897,6 +929,25 @@
           "stringUnit" : {
             "state" : "needs_review",
             "value" : "%lld"
+          }
+        }
+      }
+    },
+    "%lld 个任务" : {
+
+    },
+    "%lld 秒" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld seconds"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld 秒"
           }
         }
       }
@@ -1301,6 +1352,23 @@
         }
       }
     },
+    "5 分钟内未连上，已暂停；请手动连接" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Paused after 5 minutes; click Connect to retry"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "5 分钟内未连上，已暂停；请手动连接"
+          }
+        }
+      }
+    },
     "About" : {
       "localizations" : {
         "ar" : {
@@ -1695,8 +1763,8 @@
         },
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Accessibility access is required to replace the system HUD."
+            "state" : "translated",
+            "value" : "替换系统状态提示需要辅助功能权限。"
           }
         }
       }
@@ -2196,8 +2264,8 @@
         },
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Advanced"
+            "state" : "translated",
+            "value" : "高级"
           }
         }
       }
@@ -2403,7 +2471,14 @@
       }
     },
     "Always show full event titles" : {
-
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "始终显示完整日程标题"
+          }
+        }
+      }
     },
     "Always show tabs" : {
       "localizations" : {
@@ -2706,7 +2781,14 @@
       }
     },
     "Auto-scroll to next event" : {
-
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "自动滚动到下一项日程"
+          }
+        }
+      }
     },
     "Automatically check for updates" : {
       "localizations" : {
@@ -3004,6 +3086,17 @@
           "stringUnit" : {
             "state" : "needs_review",
             "value" : "自动切换显示器"
+          }
+        }
+      }
+    },
+    "Backward 15s" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "后退 15 秒"
           }
         }
       }
@@ -3404,6 +3497,17 @@
           "stringUnit" : {
             "state" : "needs_review",
             "value" : "电池状态"
+          }
+        }
+      }
+    },
+    "Beta" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "测试版"
           }
         }
       }
@@ -4109,6 +4213,7 @@
       }
     },
     "Change media with horizontal gestures" : {
+      "extractionState" : "stale",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -4202,8 +4307,8 @@
         },
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Change media with horizontal gestures"
+            "state" : "translated",
+            "value" : "通过横向手势切换媒体"
           }
         }
       }
@@ -4702,8 +4807,8 @@
         },
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Choose any color"
+            "state" : "translated",
+            "value" : "选择任意颜色"
           }
         }
       }
@@ -4802,8 +4907,8 @@
         },
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Choose between your system accent color or customize it with your own selection."
+            "state" : "translated",
+            "value" : "使用系统强调色，或选择自定义颜色。"
           }
         }
       }
@@ -4902,8 +5007,8 @@
         },
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Choose which service to use when sharing files from the shelf. Click the shelf button to select files, or drag files onto it to share immediately."
+            "state" : "translated",
+            "value" : "选择文件架使用的快捷分享服务。点击分享区域选择文件，或将文件拖入该区域直接分享。"
           }
         }
       }
@@ -5102,8 +5207,8 @@
         },
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Clear slot"
+            "state" : "translated",
+            "value" : "清空位置"
           }
         }
       }
@@ -5308,6 +5413,42 @@
         }
       }
     },
+    "Codex" : {
+
+    },
+    "Codex task navigation" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Codex task navigation"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Codex 任务浏览方式"
+          }
+        }
+      }
+    },
+    "Codex 状态协议已变化，请更新接入适配" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The Codex status protocol has changed. Please update the adapter"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Codex 状态协议已变化，请更新接入适配"
+          }
+        }
+      }
+    },
     "Color Presets" : {
       "localizations" : {
         "ar" : {
@@ -5402,8 +5543,8 @@
         },
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Color Presets"
+            "state" : "translated",
+            "value" : "预设颜色"
           }
         }
       }
@@ -5502,8 +5643,8 @@
         },
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Colored spectrogram"
+            "state" : "translated",
+            "value" : "彩色频谱"
           }
         }
       }
@@ -5709,6 +5850,7 @@
       }
     },
     "Copy items on drag" : {
+      "extractionState" : "stale",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -5802,8 +5944,8 @@
         },
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Copy items on drag"
+            "state" : "translated",
+            "value" : "拖出时复制项目"
           }
         }
       }
@@ -6002,8 +6144,8 @@
         },
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Currently selected: %@"
+            "state" : "translated",
+            "value" : "当前选择：%@"
           }
         }
       }
@@ -6102,8 +6244,8 @@
         },
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Custom"
+            "state" : "translated",
+            "value" : "自定义"
           }
         }
       }
@@ -6402,8 +6544,8 @@
         },
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "自定义Notch大小 - %.0f"
+            "state" : "translated",
+            "value" : "自定义刘海高度：%.0f"
           }
         }
       }
@@ -6702,8 +6844,8 @@
         },
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Customize which controls appear in the music player. Volume expands when active."
+            "state" : "translated",
+            "value" : "自定义播放器中的控制按钮。调节音量时会展开音量滑块。"
           }
         }
       }
@@ -7406,8 +7548,8 @@
         },
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Drag a control onto a slot"
+            "state" : "translated",
+            "value" : "将控制按钮拖入位置"
           }
         }
       }
@@ -7506,13 +7648,14 @@
         },
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Drag items in the preview to reorder or drop from the palette"
+            "state" : "translated",
+            "value" : "拖动预览中的按钮调整顺序，或从下方添加按钮"
           }
         }
       }
     },
     "Drop files here" : {
+      "extractionState" : "stale",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -7812,6 +7955,17 @@
         }
       }
     },
+    "Empty slot" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "空位置"
+          }
+        }
+      }
+    },
     "Enable Accessibility in System Settings → Privacy & Security → Accessibility" : {
       "localizations" : {
         "ar" : {
@@ -7906,8 +8060,8 @@
         },
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Enable Accessibility in System Settings → Privacy & Security → Accessibility"
+            "state" : "translated",
+            "value" : "请前往“系统设置 → 隐私与安全性 → 辅助功能”授予权限"
           }
         }
       }
@@ -8214,6 +8368,7 @@
       }
     },
     "Enable gestures" : {
+      "extractionState" : "stale",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -8507,8 +8662,8 @@
         },
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Enable haptic feedback"
+            "state" : "translated",
+            "value" : "启用触觉反馈"
           }
         }
       }
@@ -8607,8 +8762,25 @@
         },
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "启用暂存区"
+            "state" : "translated",
+            "value" : "启用文件架"
+          }
+        }
+      }
+    },
+    "Enable vertical gestures" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enable vertical gestures"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "启用双指上下滑动手势"
           }
         }
       }
@@ -8713,6 +8885,9 @@
         }
       }
     },
+    "English" : {
+
+    },
     "Enhance your experience with HUDs" : {
       "localizations" : {
         "ar" : {
@@ -8807,8 +8982,8 @@
         },
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "用 HUD 提升您的体验"
+            "state" : "translated",
+            "value" : "使用状态提示提升操作体验"
           }
         }
       }
@@ -8914,7 +9089,14 @@
       }
     },
     "Expanded drag detection area" : {
-
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "扩大拖放检测区域"
+          }
+        }
+      }
     },
     "Extend hover area" : {
       "localizations" : {
@@ -9117,6 +9299,17 @@
         }
       }
     },
+    "Favorite" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "收藏"
+          }
+        }
+      }
+    },
     "Files dropped on the shelf will be shared via this service" : {
       "localizations" : {
         "ar" : {
@@ -9211,8 +9404,8 @@
         },
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Files dropped on the shelf will be shared via this service"
+            "state" : "translated",
+            "value" : "拖入分享区域的文件将通过此服务分享"
           }
         }
       }
@@ -9317,8 +9510,26 @@
         }
       }
     },
+    "Forward 15s" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "快进 15 秒"
+          }
+        }
+      }
+    },
     "Full screen behavior" : {
-
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "全屏时的显示方式"
+          }
+        }
+      }
     },
     "General" : {
       "localizations" : {
@@ -9820,6 +10031,9 @@
         }
       }
     },
+    "GitHub Releases" : {
+
+    },
     "Got it!" : {
       "localizations" : {
         "ar" : {
@@ -10114,8 +10328,8 @@
         },
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Hide all-day events"
+            "state" : "translated",
+            "value" : "隐藏全天日程"
           }
         }
       }
@@ -10221,10 +10435,24 @@
       }
     },
     "Hide for all apps" : {
-
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "所有应用全屏时隐藏"
+          }
+        }
+      }
     },
     "Hide for media app only" : {
-
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "仅媒体应用全屏时隐藏"
+          }
+        }
+      }
     },
     "Hide from screen recording" : {
       "localizations" : {
@@ -10320,14 +10548,21 @@
         },
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Hide from screen recording"
+            "state" : "translated",
+            "value" : "录屏时隐藏"
           }
         }
       }
     },
     "Hide title bar" : {
-
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "隐藏标题栏"
+          }
+        }
+      }
     },
     "Hierarchical" : {
       "localizations" : {
@@ -10623,8 +10858,8 @@
         },
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Hover delay"
+            "state" : "translated",
+            "value" : "悬停延迟"
           }
         }
       }
@@ -10823,8 +11058,8 @@
         },
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "HUD 样式"
+            "state" : "translated",
+            "value" : "状态提示样式"
           }
         }
       }
@@ -10923,8 +11158,8 @@
         },
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "HUD"
+            "state" : "translated",
+            "value" : "状态提示"
           }
         }
       }
@@ -11230,6 +11465,16 @@
         }
       }
     },
+    "Launch at login" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "登录时启动"
+          }
+        }
+      }
+    },
     "Layout Preview" : {
       "localizations" : {
         "ar" : {
@@ -11324,8 +11569,8 @@
         },
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Layout Preview"
+            "state" : "translated",
+            "value" : "布局预览"
           }
         }
       }
@@ -11930,6 +12175,17 @@
         }
       }
     },
+    "Match album art" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "与专辑封面一致"
+          }
+        }
+      }
+    },
     "Match menu bar height" : {
       "localizations" : {
         "ar" : {
@@ -12024,8 +12280,8 @@
         },
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Match menu bar height"
+            "state" : "translated",
+            "value" : "与菜单栏高度一致"
           }
         }
       }
@@ -12224,8 +12480,8 @@
         },
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Match real notch height"
+            "state" : "translated",
+            "value" : "与物理刘海高度一致"
           }
         }
       }
@@ -12624,8 +12880,8 @@
         },
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "媒体非活动超时"
+            "state" : "translated",
+            "value" : "媒体空闲等待时间"
           }
         }
       }
@@ -13730,6 +13986,28 @@
         }
       }
     },
+    "Next" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "下一首"
+          }
+        }
+      }
+    },
+    "No Action" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "不执行操作"
+          }
+        }
+      }
+    },
     "No custom animation available" : {
       "localizations" : {
         "ar" : {
@@ -14024,8 +14302,8 @@
         },
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "No events"
+            "state" : "translated",
+            "value" : "暂无日程"
           }
         }
       }
@@ -14425,8 +14703,8 @@
         },
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Notch行为"
+            "state" : "translated",
+            "value" : "刘海行为"
           }
         }
       }
@@ -14525,8 +14803,8 @@
         },
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Notch height on non-notch displays"
+            "state" : "translated",
+            "value" : "无刘海屏幕上的刘海高度"
           }
         }
       }
@@ -14625,8 +14903,8 @@
         },
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Notch height on notch displays"
+            "state" : "translated",
+            "value" : "刘海屏幕上的刘海高度"
           }
         }
       }
@@ -14725,8 +15003,19 @@
         },
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Notch sizing"
+            "state" : "translated",
+            "value" : "刘海尺寸"
+          }
+        }
+      }
+    },
+    "Now Playing" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "当前播放"
           }
         }
       }
@@ -14825,7 +15114,7 @@
         },
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "打开日历设置"
           }
         }
@@ -14925,8 +15214,8 @@
         },
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "悬停时打开Notch"
+            "state" : "translated",
+            "value" : "悬停时展开刘海"
           }
         }
       }
@@ -15025,7 +15314,7 @@
         },
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "打开提醒事项设置"
           }
         }
@@ -15125,8 +15414,19 @@
         },
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "当项目存在时默认打开暂存器"
+            "state" : "translated",
+            "value" : "无播放和 AI 任务时，有收纳项目则默认打开文件架"
+          }
+        }
+      }
+    },
+    "Open System Settings" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "打开系统设置"
           }
         }
       }
@@ -15225,8 +15525,8 @@
         },
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Option key behaviour"
+            "state" : "translated",
+            "value" : "按住 Option 键时的操作"
           }
         }
       }
@@ -15325,8 +15625,29 @@
         },
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Pick a Color"
+            "state" : "translated",
+            "value" : "选取颜色"
+          }
+        }
+      }
+    },
+    "Play/Pause" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "播放／暂停"
+          }
+        }
+      }
+    },
+    "Player tinting" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "播放器使用封面配色"
           }
         }
       }
@@ -15525,8 +15846,19 @@
         },
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Preferred display"
+            "state" : "translated",
+            "value" : "首选显示器"
+          }
+        }
+      }
+    },
+    "Previous" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "上一首"
           }
         }
       }
@@ -15725,8 +16057,8 @@
         },
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Quick Share"
+            "state" : "translated",
+            "value" : "快捷分享"
           }
         }
       }
@@ -15825,8 +16157,8 @@
         },
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Quick Share Service"
+            "state" : "translated",
+            "value" : "快捷分享服务"
           }
         }
       }
@@ -16225,8 +16557,8 @@
         },
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "记住上一个标签页"
+            "state" : "translated",
+            "value" : "无播放和 AI 任务时，记住上次标签页"
           }
         }
       }
@@ -16432,6 +16764,7 @@
       }
     },
     "Remove from shelf after dragging" : {
+      "extractionState" : "stale",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -16525,8 +16858,19 @@
         },
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Remove from shelf after dragging"
+            "state" : "translated",
+            "value" : "拖出后移除收纳记录"
+          }
+        }
+      }
+    },
+    "Repeat" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "循环播放"
           }
         }
       }
@@ -16625,8 +16969,8 @@
         },
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Replace system HUD"
+            "state" : "translated",
+            "value" : "替换系统状态提示"
           }
         }
       }
@@ -16725,8 +17069,8 @@
         },
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Request Accessibility"
+            "state" : "translated",
+            "value" : "请求辅助功能权限"
           }
         }
       }
@@ -16825,8 +17169,8 @@
         },
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Reset to Defaults"
+            "state" : "translated",
+            "value" : "恢复默认布局"
           }
         }
       }
@@ -17627,8 +17971,8 @@
         },
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "暂存器"
+            "state" : "translated",
+            "value" : "文件架"
           }
         }
       }
@@ -17727,8 +18071,8 @@
         },
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "快捷方式"
+            "state" : "translated",
+            "value" : "快捷键"
           }
         }
       }
@@ -18127,8 +18471,19 @@
         },
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Show cool face animation while inactive"
+            "state" : "translated",
+            "value" : "空闲时显示表情动画"
+          }
+        }
+      }
+    },
+    "Show HUD" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "显示状态提示"
           }
         }
       }
@@ -18227,8 +18582,8 @@
         },
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Show lyrics below artist name"
+            "state" : "translated",
+            "value" : "在歌手名称下方显示歌词"
           }
         }
       }
@@ -18327,8 +18682,8 @@
         },
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Show menu bar icon"
+            "state" : "translated",
+            "value" : "显示菜单栏图标"
           }
         }
       }
@@ -18427,8 +18782,8 @@
         },
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Show music live activity"
+            "state" : "translated",
+            "value" : "显示音乐实时动态"
           }
         }
       }
@@ -18527,8 +18882,8 @@
         },
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Show notch on lock screen"
+            "state" : "translated",
+            "value" : "在锁屏界面显示刘海"
           }
         }
       }
@@ -18927,8 +19282,8 @@
         },
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Show settings icon in notch"
+            "state" : "translated",
+            "value" : "在刘海中显示设置按钮"
           }
         }
       }
@@ -19027,8 +19382,19 @@
         },
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Show sneak peek on playback changes"
+            "state" : "translated",
+            "value" : "播放变化时显示简短预览"
+          }
+        }
+      }
+    },
+    "Shuffle" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "随机播放"
           }
         }
       }
@@ -19227,8 +19593,8 @@
         },
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Sneak Peek 在 Notch 下显示媒体标题和艺术家几秒钟。"
+            "state" : "translated",
+            "value" : "简短预览会在刘海下方短暂显示媒体标题和歌手。"
           }
         }
       }
@@ -19327,8 +19693,8 @@
         },
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Sneak Peek 样式"
+            "state" : "translated",
+            "value" : "简短预览样式"
           }
         }
       }
@@ -19734,7 +20100,24 @@
         }
       }
     },
+    "Support upstream" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Support upstream"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "支持上游项目"
+          }
+        }
+      }
+    },
     "Support Us" : {
+      "extractionState" : "stale",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -19834,6 +20217,89 @@
         }
       }
     },
+    "Swipe left for the next page and right for the previous page while the notch is open" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Swipe left for the next page and right for the previous page while the notch is open"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "刘海展开时，左滑切换到下一页，右滑切换到上一页"
+          }
+        }
+      }
+    },
+    "Swipe pages everywhere, browse tasks with controls" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Swipe pages everywhere, browse tasks with controls"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "双指始终切页面，任务使用底部控件"
+          }
+        }
+      }
+    },
+    "Swipe tasks in cards, switch pages in header" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Swipe tasks in cards, switch pages in header"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "卡片区滑动任务，顶部切换页面"
+          }
+        }
+      }
+    },
+    "Swipe tasks in task area, switch pages elsewhere" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Swipe tasks in task area, switch pages elsewhere"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "任务区域浏览任务，其余位置切换页面"
+          }
+        }
+      }
+    },
+    "Switch pages with two-finger horizontal swipes" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Switch pages with two-finger horizontal swipes"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "双指左右滑动切换页面"
+          }
+        }
+      }
+    },
     "System" : {
       "localizations" : {
         "ar" : {
@@ -19928,8 +20394,8 @@
         },
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "System"
+            "state" : "translated",
+            "value" : "系统"
           }
         }
       }
@@ -20030,6 +20496,22 @@
           "stringUnit" : {
             "state" : "needs_review",
             "value" : "系统功能"
+          }
+        }
+      }
+    },
+    "The task bar and arrow buttons remain available in both modes." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The task bar and arrow buttons remain available in both modes."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "两种模式均提供底部任务滑动栏和左右按钮。"
           }
         }
       }
@@ -20228,8 +20710,8 @@
         },
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Tint progress bar with accent color"
+            "state" : "translated",
+            "value" : "进度条使用强调色"
           }
         }
       }
@@ -20328,8 +20810,8 @@
         },
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "切换Notch："
+            "state" : "translated",
+            "value" : "展开／收起刘海："
           }
         }
       }
@@ -20428,8 +20910,8 @@
         },
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "触发 Sneak Peek："
+            "state" : "translated",
+            "value" : "显示简短预览："
           }
         }
       }
@@ -20528,8 +21010,8 @@
         },
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "在Notch里双指向上滑动以关闭。当**悬停在Notch时打开**选项禁用时，双指向下滑动即可打开"
+            "state" : "translated",
+            "value" : "在刘海上双指上滑可收起；关闭“**悬停时展开刘海**”后，可双指下滑展开。"
           }
         }
       }
@@ -21137,6 +21619,7 @@
       }
     },
     "Use your macOS system accent color" : {
+      "extractionState" : "stale",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -21230,8 +21713,8 @@
         },
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Use your macOS system accent color"
+            "state" : "translated",
+            "value" : "使用 macOS 系统强调色"
           }
         }
       }
@@ -21330,8 +21813,8 @@
         },
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Using System Accent"
+            "state" : "translated",
+            "value" : "正在使用系统强调色"
           }
         }
       }
@@ -21630,8 +22113,19 @@
         },
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "View on GitHub: pear-devs/pear-desktop"
+            "state" : "translated",
+            "value" : "在 GitHub 查看：pear-devs/pear-desktop"
+          }
+        }
+      }
+    },
+    "Volume" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "音量"
           }
         }
       }
@@ -21836,6 +22330,17 @@
         }
       }
     },
+    "White" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "白色"
+          }
+        }
+      }
+    },
     "Window Appearance" : {
       "localizations" : {
         "ar" : {
@@ -21930,8 +22435,8 @@
         },
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Window Appearance"
+            "state" : "translated",
+            "value" : "窗口外观"
           }
         }
       }
@@ -22030,8 +22535,8 @@
         },
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Window Behavior"
+            "state" : "translated",
+            "value" : "窗口行为"
           }
         }
       }
@@ -22330,8 +22835,8 @@
         },
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Your macOS system accent color"
+            "state" : "translated",
+            "value" : "macOS 系统强调色"
           }
         }
       }
@@ -22432,6 +22937,584 @@
           "stringUnit" : {
             "state" : "needs_review",
             "value" : "YouTube 音乐需要安装此第三方应用程序： "
+          }
+        }
+      }
+    },
+    "上一个任务" : {
+
+    },
+    "下一个任务" : {
+
+    },
+    "任务完成或需要你处理时，刘海会自动展开" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The notch opens when a task finishes or needs your attention"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "任务完成或需要你处理时，刘海会自动展开"
+          }
+        }
+      }
+    },
+    "任务完成或需要操作时自动下滑提醒" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open the notch when a task finishes or needs attention"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "任务完成或需要操作时自动下滑提醒"
+          }
+        }
+      }
+    },
+    "使用已授权目录重新连接 Codex" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reconnect to Codex using the authorized folder"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "使用已授权目录重新连接 Codex"
+          }
+        }
+      }
+    },
+    "允许本次" : {
+
+    },
+    "关闭快捷分享区域可腾出空间。区域按钮整块都支持拖入，描边和勾选标记表示当前区域。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hide Quick Share to make more room. Drop onto either zone button to add items; the outline and checkmark show the selected zone."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "关闭快捷分享区域可腾出空间。区域按钮整块都支持拖入，描边和勾选标记表示当前区域。"
+          }
+        }
+      }
+    },
+    "剪切区" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cut zone"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "剪切区"
+          }
+        }
+      }
+    },
+    "可设为 1–60 秒，默认 6 秒；修改对下一次完成提醒生效。光标停留时保持展开，需要人工操作的提醒仍展示 12 秒。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Choose 1–60 seconds (default 6). Changes apply to the next completion reminder. Hovering keeps it open; requests needing attention still display for 12 seconds."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "可设为 1–60 秒，默认 6 秒；修改对下一次完成提醒生效。光标停留时保持展开，需要人工操作的提醒仍展示 12 秒。"
+          }
+        }
+      }
+    },
+    "在 Codex 中打开会话后，这里会显示任务状态" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open a conversation in Codex to see its task status here"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在 Codex 中打开会话后，这里会显示任务状态"
+          }
+        }
+      }
+    },
+    "在 Codex 中打开此任务" : {
+
+    },
+    "处理请求" : {
+
+    },
+    "复制区" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copy zone"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "复制区"
+          }
+        }
+      }
+    },
+    "复制区在左侧" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Show the copy zone on the left"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "复制区在左侧"
+          }
+        }
+      }
+    },
+    "完成提醒展开时，对应任务的边框会短暂闪烁，并自动滚动到该任务。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Completion reminders scroll to the matching task and briefly flash its border."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "完成提醒展开时，对应任务的边框会短暂闪烁，并自动滚动到该任务。"
+          }
+        }
+      }
+    },
+    "完成提醒展示时长" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Completion reminder duration"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "完成提醒展示时长"
+          }
+        }
+      }
+    },
+    "将已完成任务的提醒标为已读" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mark completed task reminders as read"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "将已完成任务的提醒标为已读"
+          }
+        }
+      }
+    },
+    "已连接 Codex" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Connected to Codex"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已连接 Codex"
+          }
+        }
+      }
+    },
+    "当前状态" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Current status"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "当前状态"
+          }
+        }
+      }
+    },
+    "成功拖出移动后，移除收纳记录" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Remove the shelf item after a successful drag move"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "成功拖出移动后，移除收纳记录"
+          }
+        }
+      }
+    },
+    "打开原任务" : {
+
+    },
+    "拒绝" : {
+
+    },
+    "拖入文件、图片或文字" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Drop files, images, or text here"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "拖入文件、图片或文字"
+          }
+        }
+      }
+    },
+    "拖入文件或文件夹" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Drop files or folders here"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "拖入文件或文件夹"
+          }
+        }
+      }
+    },
+    "拖出复制，保留原文件和收纳记录" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Drag out to copy; keep the original and shelf item"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "拖出复制，保留原文件和收纳记录"
+          }
+        }
+      }
+    },
+    "提交回答" : {
+
+    },
+    "提醒" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reminders"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "提醒"
+          }
+        }
+      }
+    },
+    "无法保存目录访问权限，请重新选择" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Could not save folder access. Please choose the folder again"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "无法保存目录访问权限，请重新选择"
+          }
+        }
+      }
+    },
+    "显示隔空投送／快捷分享区域" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Show AirDrop / Quick Share"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "显示隔空投送／快捷分享区域"
+          }
+        }
+      }
+    },
+    "标记已读" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mark as read"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "标记已读"
+          }
+        }
+      }
+    },
+    "正在连接 Codex…" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Connecting to Codex…"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在连接 Codex…"
+          }
+        }
+      }
+    },
+    "此测试版尚未启用自动更新，请前往本项目 GitHub Releases 查看版本。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Automatic updates are not enabled for this beta. Check this project’s GitHub Releases for new versions."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "此测试版尚未启用自动更新，请前往本项目 GitHub Releases 查看版本。"
+          }
+        }
+      }
+    },
+    "此请求类型请在 Codex 中处理" : {
+
+    },
+    "浏览 Codex 任务" : {
+
+    },
+    "点击切换，或将文件直接拖到这里加入%@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Click to switch, or drop files here to add to %@"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "点击切换，或将文件直接拖到这里加入%@"
+          }
+        }
+      }
+    },
+    "移至%@（仅改变收纳区域）" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Move to %@ (changes the shelf zone only)"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "移至%@（仅改变收纳区域）"
+          }
+        }
+      }
+    },
+    "等待连接 Codex" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Waiting to connect to Codex"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "等待连接 Codex"
+          }
+        }
+      }
+    },
+    "简体中文" : {
+
+    },
+    "简体中文 / English" : {
+
+    },
+    "自动提醒已关闭，可在设置 → Codex 中开启" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Automatic reminders are off. Enable them in Settings → Codex"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "自动提醒已关闭，可在设置 → Codex 中开启"
+          }
+        }
+      }
+    },
+    "自定义回答" : {
+
+    },
+    "请求" : {
+
+    },
+    "返回任务" : {
+
+    },
+    "连接" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Connection"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "连接"
+          }
+        }
+      }
+    },
+    "连接 Codex" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Connect to Codex"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "连接 Codex"
+          }
+        }
+      }
+    },
+    "连续 5 分钟未能连接成功后，停止自动尝试。点击连接按钮可重新开始；已连接期间不会因超过 5 分钟而断开。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Automatic attempts stop after 5 minutes of connection failures. Click Connect to try again. An established connection has no time limit."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "连续 5 分钟未能连接成功后，停止自动尝试。点击连接按钮可重新开始；已连接期间不会因超过 5 分钟而断开。"
+          }
+        }
+      }
+    },
+    "选择数据目录…" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Choose data folder…"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "选择数据目录…"
+          }
+        }
+      }
+    },
+    "重新连接" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reconnect"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "重新连接"
           }
         }
       }

@@ -7,7 +7,6 @@
 
 import AppKit
 import SwiftUI
-import Defaults
 
 import QuickLook
 
@@ -222,6 +221,8 @@ private struct DraggableClickHandler<Content: View>: NSViewRepresentable {
         private let dragThreshold: CGFloat = 3.0
         private var draggedURLs: [URL] = []
         private var draggedItems: [ShelfItem] = []
+        private var originalURLs: [UUID: URL] = [:]
+        private var transferToken = UUID()
         
         override func rightMouseDown(with event: NSEvent) {
             onRightClick?(event, self)
@@ -253,7 +254,7 @@ private struct DraggableClickHandler<Content: View>: NSViewRepresentable {
         
         private func startDragSession(with event: NSEvent) {
             // Prepare dragging items
-            let selectedItems = ShelfSelectionModel.shared.selectedItems(in: ShelfStateViewModel.shared.items)
+            let selectedItems = ShelfSelectionModel.shared.selectedItems(in: ShelfStateViewModel.shared.items).filter { $0.zone == item.zone }
             let itemsToDrag: [ShelfItem]
 
             if selectedItems.count > 1 && selectedItems.contains(where: { $0.id == item.id }) {
@@ -263,7 +264,9 @@ private struct DraggableClickHandler<Content: View>: NSViewRepresentable {
             }
 
             // Store items being dragged for auto-remove feature
-            draggedItems = itemsToDrag
+            draggedItems = []
+            originalURLs = [:]
+            transferToken = UUID()
 
             // Create dragging items for AppKit
             var draggingItems: [NSDraggingItem] = []
@@ -283,24 +286,30 @@ private struct DraggableClickHandler<Content: View>: NSViewRepresentable {
                     draggingItem.setDraggingFrame(imageFrame, contents: image)
 
                     draggingItems.append(draggingItem)
+                    draggedItems.append(dragItem)
                 }
             }
 
             guard !draggingItems.isEmpty else { return }
 
+            ShelfSelectionModel.shared.prepareDrag(token: transferToken, ids: Set(draggedItems.map(\.id)))
             beginDraggingSession(with: draggingItems, event: event, source: self)
         }
         
         private func createPasteboardItem(for item: ShelfItem) -> NSPasteboardItem? {
             let pasteboardItem = NSPasteboardItem()
+            let transfer = ShelfInternalTransfer(token: transferToken, itemID: item.id)
+            if let data = try? JSONEncoder().encode(transfer) {
+                pasteboardItem.setData(data, forType: NSPasteboard.PasteboardType(ShelfInternalTransfer.type.identifier))
+            }
 
             switch item.kind {
             case .file:
                 guard let url = ShelfStateViewModel.shared.resolveAndUpdateBookmark(for: item) else {
-                    pasteboardItem.setString(item.displayName, forType: .string)
-                    return pasteboardItem
+                    return nil
                 }
                 
+                originalURLs[item.id] = url
                 // Start accessing security-scoped resource and keep it active during drag
                 if url.startAccessingSecurityScopedResource() {
                     draggedURLs.append(url)
@@ -325,47 +334,52 @@ private struct DraggableClickHandler<Content: View>: NSViewRepresentable {
         // MARK: - NSDraggingSource
         
         func draggingSession(_ session: NSDraggingSession, sourceOperationMaskFor context: NSDraggingContext) -> NSDragOperation {
-            // When copyOnDrag is enabled, only allow copy operations
-            if Defaults[.copyOnDrag] {
-                return [.copy]
-            }
-            
-            switch context {
-            case .outsideApplication:
-                return [.copy, .move]
-            case .withinApplication:
-                return [.copy, .move, .generic]
-            @unknown default:
-                return [.copy]
-            }
+            // The zone defines the operation; Option cannot silently change its meaning.
+            // No move is advertised for text, links, or application-owned temporary files.
+            if context == .withinApplication { return [.copy] }
+            return item.zone == .cut && item.canMoveOriginal ? [.move] : [.copy]
         }
         
         func draggingSession(_ session: NSDraggingSession, willBeginAt screenPoint: NSPoint) {
             ShelfSelectionModel.shared.beginDrag()
+            ShelfInternalDropRouter.shared.begin()
+            ShelfDragDiagnostics.record("source-begin count=\(draggedItems.count) frame=\(NSStringFromRect(bounds))")
         }
         
         
+        func draggingSession(_ session: NSDraggingSession, movedTo screenPoint: NSPoint) {
+            ShelfInternalDropRouter.shared.update(at: screenPoint)
+            session.animatesToStartingPositionsOnCancelOrFail = !ShelfInternalDropRouter.shared.hasTarget
+        }
+
         func draggingSession(_ session: NSDraggingSession, endedAt screenPoint: NSPoint, operation: NSDragOperation) {
-            ShelfSelectionModel.shared.endDrag()
-
-            // Stop accessing security-scoped resources after drag completes
-            for url in draggedURLs {
-                url.stopAccessingSecurityScopedResource()
-                NSLog("🔐 Stopped security-scoped access after drag: \(url.path)")
+            defer {
+                ShelfInternalDropRouter.shared.clearHighlight()
+                ShelfSelectionModel.shared.endDrag()
             }
-            draggedURLs.removeAll()
+            let selection = ShelfSelectionModel.shared
+            let escaped = NSApp.currentEvent?.type == .keyDown && NSApp.currentEvent?.keyCode == 53
+            let released = NSEvent.pressedMouseButtons & 1 == 0
+            if selection.dragToken == transferToken, released, !escaped {
+                _ = ShelfInternalDropRouter.shared.finish(at: screenPoint, token: transferToken, ids: selection.draggedIDs)
+            }
+            ShelfDragDiagnostics.record("source-end operation=\(operation.rawValue) point=\(NSStringFromPoint(screenPoint))")
 
-            // Auto-remove items from shelf if enabled and drag succeeded
-            if Defaults[.autoRemoveShelfItems] && !operation.isEmpty {
-                for item in draggedItems {
+            // Finder owns the move. Verify each original path too: one failed item
+            // in a multi-file drop must not disappear merely because the session says move.
+            for item in draggedItems where item.zone.removesReference(afterMove: operation == .move) {
+                if let original = originalURLs[item.id], !FileManager.default.fileExists(atPath: original.path) {
                     ShelfStateViewModel.shared.remove(item)
                 }
             }
+            for url in draggedURLs { url.stopAccessingSecurityScopedResource() }
+            draggedURLs.removeAll()
+            originalURLs.removeAll()
             draggedItems.removeAll()
         }
         
         func ignoreModifierKeys(for session: NSDraggingSession) -> Bool {
-            return false
+            return true
         }
     }
 }

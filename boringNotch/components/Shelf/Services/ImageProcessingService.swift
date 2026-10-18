@@ -8,6 +8,7 @@
 import Foundation
 import AppKit
 import CoreImage
+import CoreImage.CIFilterBuiltins
 import CoreGraphics
 import Vision
 import PDFKit

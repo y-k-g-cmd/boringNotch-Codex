@@ -6,11 +6,44 @@
 //
 
 import Foundation
+import Darwin
 import ApplicationServices
 import IOKit
 import CoreGraphics
 
 class BoringNotchXPCHelper: NSObject, BoringNotchXPCHelperProtocol {
+    @objc func openCodexStatusSocket(with reply: @escaping (FileHandle?, Int32) -> Void) {
+        // No caller-supplied path, commands, or data. The existing helper is unsandboxed.
+        guard let user = getpwuid(getuid()), let directory = user.pointee.pw_dir else {
+            reply(nil, ENOENT); return
+        }
+        let path = String(cString: directory) + "/.codex/ipc/ipc.sock"
+        var info = stat()
+        guard lstat(path, &info) == 0 else { reply(nil, errno); return }
+        guard info.st_uid == getuid(), (info.st_mode & S_IFMT) == S_IFSOCK else {
+            reply(nil, EACCES); return
+        }
+        let fd = socket(AF_UNIX, SOCK_STREAM, 0)
+        guard fd >= 0 else { reply(nil, errno); return }
+        var address = sockaddr_un()
+        address.sun_family = sa_family_t(AF_UNIX)
+        let bytes = Array(path.utf8CString)
+        guard bytes.count <= MemoryLayout.size(ofValue: address.sun_path) else {
+            Darwin.close(fd); reply(nil, ENAMETOOLONG); return
+        }
+        withUnsafeMutableBytes(of: &address.sun_path) { target in
+            bytes.withUnsafeBytes { target.copyBytes(from: $0) }
+        }
+        let result = withUnsafePointer(to: &address) {
+            $0.withMemoryRebound(to: sockaddr.self, capacity: 1) {
+                Darwin.connect(fd, $0, socklen_t(MemoryLayout<sockaddr_un>.size))
+            }
+        }
+        guard result == 0 else { let code = errno; Darwin.close(fd); reply(nil, code); return }
+        let handle = FileHandle(fileDescriptor: fd, closeOnDealloc: true)
+        reply(handle, 0)
+    }
+
     
     @objc func isAccessibilityAuthorized(with reply: @escaping (Bool) -> Void) {
         reply(AXIsProcessTrusted())

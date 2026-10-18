@@ -1,0 +1,3 @@
+# Preserve archived upstream documents and license copies verbatim.
+docs/UPSTREAM_README.md -whitespace
+docs/third-party/* -whitespace

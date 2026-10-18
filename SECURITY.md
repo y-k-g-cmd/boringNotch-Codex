@@ -1,11 +1,9 @@
-# Security Policy
+# 安全反馈
 
-## Reporting a Vulnerability
+本 fork 独立维护，不代表上游作者接受或处理本 fork 的漏洞报告。
 
-The Bored Team and community take security bugs in Boring Notch seriously. We appreciate your efforts to responsibly disclose your findings, and will make every effort to acknowledge your contributions.
+如仓库已启用 GitHub 的私密漏洞报告，请在本仓库 Security → Advisories → Report a vulnerability 提交。发布前维护者应启用该渠道；当前尚未确认线上渠道存在。
 
-To report a security issue, please use the GitHub Security Advisory ["Report a Vulnerability"](https://github.com/TheBoredTeam/boring.notch/security/advisories/new) tab.
+若尚无私密渠道，可先发一个不含技术细节及敏感内容的 Issue 请求联系维护者。不要公开令牌、认证文件、会话正文、用户目录快照或可直接滥用的细节。
 
-The Bored Team will send a response indicating the next steps in handling your report. After the initial reply to your report, we will keep you informed of the progress towards a fix and full announcement, and may ask for additional information or guidance.
-
-Report security bugs in third-party dependencies to the person or team maintaining the package or dependency.
+Codex 使用非公开本地接口；请求必须与当前会话及所有者匹配，过期请求应拒绝，操作需由使用者主动确认。客户端升级后请重新验证兼容性。
