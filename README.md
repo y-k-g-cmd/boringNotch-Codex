@@ -17,7 +17,7 @@
 
 ## 构建与安装
 
-测试版：[v0.1.0-beta.1](https://github.com/y-k-g-cmd/boringNotch-Codex/releases/tag/v0.1.0-beta.1)，基于构建 271.18，适用 macOS 15+，包含 Apple Silicon 与 Intel。请先阅读 [安装及限制](docs/BETA_INSTALL.md)。这是 ad-hoc 本地签名、尚未经过 Developer ID 签名或 Apple 公证的测试包。
+测试版：[v0.1.0-beta.2](https://github.com/y-k-g-cmd/boringNotch-Codex/releases/tag/v0.1.0-beta.2)，基于构建 271.21，提供 DMG 和 ZIP，适用 macOS 15+，包含 Apple Silicon 与 Intel。请先阅读 [安装及限制](docs/BETA_INSTALL.md)。这是 ad-hoc 本地签名、尚未经过 Developer ID 签名或 Apple 公证的测试包。
 
 从源码构建见 [BUILDING.md](BUILDING.md)。应用显示版本为 0.1.0，构建号为 271.18。
 
