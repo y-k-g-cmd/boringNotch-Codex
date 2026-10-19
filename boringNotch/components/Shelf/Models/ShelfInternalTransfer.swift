@@ -103,3 +103,20 @@ extension Notification.Name {
         for target in targets.values { target.highlight(false) }
     }
 }
+
+/// Import callbacks can finish after AppKit has stopped sending destination events.
+/// Release transient targeting for both success and failure, without ending a newer drag.
+@MainActor enum ShelfDropCompletion {
+    static func shouldReset(importRevision: Int, currentRevision: Int, mouseIsDown: Bool, internalDragIsActive: Bool) -> Bool {
+        !internalDragIsActive && (!mouseIsDown || importRevision == currentRevision)
+    }
+
+    static func finishImport(dragRevision: Int) {
+        guard shouldReset(importRevision: dragRevision,
+                          currentRevision: NSPasteboard(name: .drag).changeCount,
+                          mouseIsDown: NSEvent.pressedMouseButtons & 1 != 0,
+                          internalDragIsActive: ShelfSelectionModel.shared.isDragging) else { return }
+        ShelfInternalDropRouter.shared.clearHighlight()
+        NotificationCenter.default.post(name: .shelfDragDidFinish, object: nil)
+    }
+}

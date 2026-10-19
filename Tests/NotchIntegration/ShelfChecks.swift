@@ -97,6 +97,13 @@ struct ShelfChecks {
         precondition(entryPulses == 4, "internal completion stays silent too")
         print("PASS: hover-entry haptics, same-region deduplication, target changes, reentry, silent completion")
 
+        precondition(ShelfDropCompletion.shouldReset(importRevision: 10, currentRevision: 10, mouseIsDown: false, internalDragIsActive: false), "failed or successful import clears the completed external drag")
+        precondition(ShelfDropCompletion.shouldReset(importRevision: 10, currentRevision: 10, mouseIsDown: true, internalDragIsActive: false), "same-session completion cleans up even if the last mouse sample is stale")
+        precondition(!ShelfDropCompletion.shouldReset(importRevision: 10, currentRevision: 11, mouseIsDown: true, internalDragIsActive: false), "late import cannot clear a newer Finder drag")
+        precondition(!ShelfDropCompletion.shouldReset(importRevision: 10, currentRevision: 10, mouseIsDown: false, internalDragIsActive: true), "import callback cannot clear an internal source session")
+        precondition(ShelfDropCompletion.shouldReset(importRevision: 10, currentRevision: 11, mouseIsDown: false, internalDragIsActive: false), "no active drag allows clearing any stale highlight")
+        print("PASS: completed import cleanup, stale mouse sample, newer external/internal drag protection")
+
         let legacy = Data("""
         [{"id":"00000000-0000-0000-0000-000000000001","kind":{"type":"text","value":"keep me"},"isTemporary":false}]
         """.utf8)

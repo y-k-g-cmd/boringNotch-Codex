@@ -127,7 +127,10 @@ struct ShelfView: View {
         }
         .foregroundStyle(.white)
         .environment(\.colorScheme, .dark)
-        .onReceive(NotificationCenter.default.publisher(for: .shelfDragDidFinish)) { _ in targetedZone = nil }
+        .onReceive(NotificationCenter.default.publisher(for: .shelfDragDidFinish)) { _ in
+            targetedZone = nil
+            mainTargeted = false
+        }
         .onChange(of: activeZone) { selection.clear() }
         .onChange(of: selection.selectedIDs) { updateQuickLookSelection() }
         .onAppear { shelf.refreshBookmarks() }

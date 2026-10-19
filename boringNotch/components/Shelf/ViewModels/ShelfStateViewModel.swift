@@ -141,10 +141,12 @@ final class ShelfStateViewModel: ObservableObject {
         isLoading = true
         importMessage = "正在收纳…"
         importFailed = false
+        let dragRevision = NSPasteboard(name: .drag).changeCount
         Task { [weak self] in
             let result = await ShelfDropService.importItems(from: providers)
             let dropped = result.items
             await MainActor.run {
+                defer { ShelfDropCompletion.finishImport(dragRevision: dragRevision) }
                 let accepted = dropped.compactMap { item -> ShelfItem? in
                     guard zone == .copy || item.canMoveOriginal else { return nil }
                     var item = item

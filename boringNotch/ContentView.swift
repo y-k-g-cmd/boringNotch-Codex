@@ -188,6 +188,8 @@ struct ContentView: View {
                         }
                     }
                     .onReceive(NotificationCenter.default.publisher(for: .shelfDragDidFinish)) { _ in
+                        ShelfInternalDropRouter.shared.clearHighlight()
+                        vm.dropEvent = false
                         vm.dragDetectorTargeting = false
                         vm.generalDropTargeting = false
                         vm.dropZoneTargeting = false
@@ -279,11 +281,8 @@ struct ContentView: View {
                 try? await Task.sleep(for: .milliseconds(500))
                 guard !Task.isCancelled else { return }
 
-                if vm.dropEvent {
-                    vm.dropEvent = false
-                    return
-                }
-
+                // A completed drop must not consume the only leave/close check.
+                // The actual pointer position still keeps an occupied shelf open.
                 vm.dropEvent = false
                 if !SharingStateManager.shared.preventNotchClose {
                     closeAfterHover()
