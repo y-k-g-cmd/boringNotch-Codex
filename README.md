@@ -2,7 +2,7 @@
 
 基于 [TheBoredTeam/boring.notch](https://github.com/TheBoredTeam/boring.notch) 的非官方独立 fork，保留原有媒体、日历和文件架体验，增加 Codex 任务提醒及双区收纳。
 
-**状态：Beta 源码。项目仓库：https://github.com/y-k-g-cmd/boringNotch-Codex 。尚未发布正式安装包。**
+**状态：Beta 测试版。项目仓库：https://github.com/y-k-g-cmd/boringNotch-Codex 。**
 
 维护方针：固定在上游 v2.7.3 基础独立维护，不自动跟进上游 2.8、RC 或 Nightly。自动更新未来仅服务于本 fork 自己发布的版本。
 
@@ -17,7 +17,9 @@
 
 ## 构建与安装
 
-见 [BUILDING.md](BUILDING.md)。当前源码已同步本地定制版 271.18；公开候选版显示版本为 0.1.0，构建号为 271.18。尚未发布经过 Developer ID 签名和 Apple 公证的安装包。
+测试版：[v0.1.0-beta.1](https://github.com/y-k-g-cmd/boringNotch-Codex/releases/tag/v0.1.0-beta.1)，基于构建 271.18，适用 macOS 15+，包含 Apple Silicon 与 Intel。请先阅读 [安装及限制](docs/BETA_INSTALL.md)。这是 ad-hoc 本地签名、尚未经过 Developer ID 签名或 Apple 公证的测试包。
+
+从源码构建见 [BUILDING.md](BUILDING.md)。应用显示版本为 0.1.0，构建号为 271.18。
 
 首次运行时按需要授权 Codex 数据目录、文件夹及媒体等功能。新 fork 使用独立 Bundle ID，原本本地版的设置和安全书签不会自动迁移。
 
