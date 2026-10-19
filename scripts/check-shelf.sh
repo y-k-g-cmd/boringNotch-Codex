@@ -7,6 +7,7 @@ sources=(
  "$root/Tests/NotchIntegration/ShelfHostStubs.swift"
  "$root/boringNotch/models/SharingStateManager.swift"
  "$root/boringNotch/helpers/AssociatedObject.swift"
+ "$root/boringNotch/helpers/NotchHapticFeedback.swift"
  "$root/boringNotch/extensions/URL+SecurityScoped.swift"
  "$root/boringNotch/extensions/NSItemProvider+LoadHelpers.swift"
  "$root/boringNotch/extensions/NSMenu+AssociatedObject.swift"

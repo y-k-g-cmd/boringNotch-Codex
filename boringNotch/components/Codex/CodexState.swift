@@ -344,6 +344,10 @@ struct CodexNotchState: Equatable {
     var attentionCount = 0
     var reminderSequence = 0
 
+    func enteredRetryPause(from previous: Self) -> Bool {
+        retryPaused && !previous.retryPaused
+    }
+
     init() {}
     init(sessions: [CodexSession], connected: Bool, unread: Set<String>, reminderSequence: Int, retryPaused: Bool = false) {
         self.retryPaused = retryPaused

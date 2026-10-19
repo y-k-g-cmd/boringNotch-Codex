@@ -11,6 +11,7 @@ struct ShelfView: View {
     @AppStorage("shelfShowQuickShare") private var showQuickShare = true
     @AppStorage("shelfCopyFirst") private var copyFirst = true
     @State private var targetedZone: ShelfZone?
+    @State private var mainTargeted = false
     private let dropTypes: [UTType] = [ShelfInternalTransfer.type, .fileURL, .url, .utf8PlainText, .plainText, .data]
 
     var body: some View {
@@ -55,7 +56,13 @@ struct ShelfView: View {
                             accept(providers, into: zone)
                         }
                         .overlay {
-                            ShelfZoneDragDestination(isTargeted: zoneTarget(zone), activate: { activeZone = zone }) { ids in
+                            ShelfZoneDragDestination(isTargeted: zoneTarget(zone), activate: { activeZone = zone }, receiveExternal: { providers in
+                                    guard !providers.isEmpty else { return false }
+                                    shelf.load(providers, into: zone)
+                                    vm.dropEvent = true
+                                    DispatchQueue.main.async { activeZone = zone }
+                                    return true
+                            }) { ids in
                                     guard shelf.transfer(ids, into: zone) else { return false }
                                     vm.dropEvent = true
                                     // Defer the page change until AppKit finishes the source session.
@@ -102,8 +109,19 @@ struct ShelfView: View {
                     }
                     .contentShape(Rectangle())
                     .onTapGesture { selection.clear() }
-                    .onDrop(of: dropTypes, isTargeted: $vm.dragDetectorTargeting) { providers in
+                    .onDrop(of: dropTypes, isTargeted: mainTarget) { providers in
                         accept(providers, into: activeZone)
+                    }
+                    .background {
+                        // Track the main area's geometry without covering file drag sources.
+                        ShelfZoneDragDestination(isTargeted: mainTarget, activate: {}, receiveExternal: { providers in
+                            guard !providers.isEmpty else { return false }
+                            shelf.load(providers, into: activeZone)
+                            vm.dropEvent = true
+                            return true
+                        }, capturesMouse: false) { ids in
+                            shelf.transfer(ids, into: activeZone)
+                        }
                     }
             }
         }
@@ -120,7 +138,16 @@ struct ShelfView: View {
         Binding(get: { targetedZone == zone }, set: { targeted in
             if targeted { targetedZone = zone }
             else if targetedZone == zone { targetedZone = nil }
-            vm.dragDetectorTargeting = targetedZone != nil
+            vm.dragDetectorTargeting = targetedZone != nil || mainTargeted
+            if targeted { ShelfInternalDropRouter.shared.update(at: NSEvent.mouseLocation, external: !selection.isDragging) }
+        })
+    }
+
+    private var mainTarget: Binding<Bool> {
+        Binding(get: { mainTargeted }, set: { targeted in
+            mainTargeted = targeted
+            vm.dragDetectorTargeting = targeted || targetedZone != nil
+            if targeted { ShelfInternalDropRouter.shared.update(at: NSEvent.mouseLocation, external: !selection.isDragging) }
         })
     }
 
@@ -143,10 +170,13 @@ struct ShelfView: View {
 private struct ShelfZoneDragDestination: NSViewRepresentable {
     @Binding var isTargeted: Bool
     var activate: () -> Void
+    var receiveExternal: ([NSItemProvider]) -> Bool
+    var capturesMouse = true
     var receive: (Set<UUID>) -> Bool
 
     func makeNSView(context: Context) -> Destination {
         let view = Destination()
+        view.capturesMouse = capturesMouse
         view.registerForDraggedTypes([NSPasteboard.PasteboardType(ShelfInternalTransfer.type.identifier)])
         return view
     }
@@ -155,6 +185,7 @@ private struct ShelfZoneDragDestination: NSViewRepresentable {
         view.targeted = { isTargeted = $0 }
         view.activate = activate
         view.receive = receive
+        view.receiveExternal = receiveExternal
         view.registerSourceTarget()
     }
 
@@ -164,14 +195,20 @@ private struct ShelfZoneDragDestination: NSViewRepresentable {
 
     final class Destination: NSView {
         var targeted: (Bool) -> Void = { _ in }
+        var capturesMouse = true
+        override func hitTest(_ point: NSPoint) -> NSView? {
+            capturesMouse ? super.hitTest(point) : nil
+        }
         var activate: () -> Void = {}
+        var receiveExternal: ([NSItemProvider]) -> Bool = { _ in false }
         let targetID = UUID()
         func registerSourceTarget() {
             ShelfInternalDropRouter.shared.register(targetID, target: .init(frame: { [weak self] in
                 guard let self, let window = self.window, window.isVisible,
                       !self.isHiddenOrHasHiddenAncestor, self.bounds.width > 0, self.bounds.height > 0 else { return nil }
                 return window.convertToScreen(self.convert(self.bounds, to: nil))
-            }, highlight: { [weak self] in self?.targeted($0) }, receive: { [weak self] in self?.receive($0) ?? false }))
+            }, highlight: { [weak self] in self?.targeted($0) }, receive: { [weak self] in self?.receive($0) ?? false },
+               receiveExternal: { [weak self] in self?.receiveExternal($0) ?? false }))
         }
         private var loggedFrame = NSRect.zero
         override func acceptsFirstMouse(for event: NSEvent?) -> Bool { true }

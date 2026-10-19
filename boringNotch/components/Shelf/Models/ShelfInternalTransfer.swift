@@ -52,30 +52,51 @@ extension Notification.Name {
         var frame: () -> NSRect?
         var highlight: (Bool) -> Void
         var receive: (Set<UUID>) -> Bool
+        var receiveExternal: (([NSItemProvider]) -> Bool)? = nil
     }
     private var targets: [UUID: Target] = [:]
     private var hovered: UUID?
     private var consumedToken: UUID?
+    private let feedback: @MainActor () -> Void
+
+    init(feedback: @escaping @MainActor () -> Void = { NotchHapticFeedback.perform() }) {
+        self.feedback = feedback
+    }
 
     func register(_ id: UUID, target: Target) { targets[id] = target }
     func unregister(_ id: UUID) { targets.removeValue(forKey: id); if hovered == id { hovered = nil } }
     func begin() { consumedToken = nil; clearHighlight() }
-    func update(at point: NSPoint) {
-        let next = targets.first { $0.value.frame()?.contains(point) == true }?.key
+    func update(at point: NSPoint, external: Bool = false, announce: Bool = true) {
+        let next = targets.first {
+            (!external || $0.value.receiveExternal != nil) && $0.value.frame()?.contains(point) == true
+        }?.key
         guard next != hovered else { return }
         hovered = next
+        if next != nil, announce { feedback() }
         for (id, target) in targets { target.highlight(id == next) }
         ShelfDragDiagnostics.record("source-target inside=\(next != nil)")
     }
     @discardableResult func finish(at point: NSPoint, token: UUID, ids: Set<UUID>) -> Bool {
         if consumedToken == token { return true }
-        update(at: point)
+        update(at: point, announce: false)
         guard let hovered, let target = targets[hovered], !ids.isEmpty else { return false }
         let accepted = target.receive(ids)
         if accepted { consumedToken = token }
         ShelfDragDiagnostics.record("source-transfer accepted=\(accepted) count=\(ids.count)")
         return accepted
     }
+    /// Finder events can be owned by the outer SwiftUI hosting view. Resolve the
+    /// exact native header at release rather than falling back to the active zone.
+    /// nil means no header; false means a header rejected the drop (do not fall back).
+    func finishExternal(at point: NSPoint, providers: [NSItemProvider]) -> Bool? {
+        guard !providers.isEmpty,
+              !providers.contains(where: { $0.hasItemConformingToTypeIdentifier(ShelfInternalTransfer.type.identifier) }) else { return false }
+        update(at: point, external: true, announce: false)
+        defer { clearHighlight() }
+        guard let hovered, let receive = targets[hovered]?.receiveExternal else { return nil }
+        return receive(providers)
+    }
+
     var hasTarget: Bool { hovered != nil }
     func clearHighlight() {
         hovered = nil

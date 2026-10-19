@@ -23,7 +23,13 @@ struct ShelfChecks {
         selection.endDrag()
         precondition(!selection.isDragging && selection.dragToken == nil && selection.draggedIDs.isEmpty, "drag end clears transient state")
         print("PASS: internal transfer payload, stale/foreign rejection, drag cleanup")
-        let router = ShelfInternalDropRouter()
+        var feedbacks = 0
+        NotchHapticFeedback.perform(enabled: false) { feedbacks += 1 }
+        precondition(feedbacks == 0, "disabled haptics must stay silent")
+        NotchHapticFeedback.perform(enabled: true) { feedbacks += 1 }
+        precondition(feedbacks == 1, "one enabled action requests one native feedback")
+        print("PASS: haptic preference gate and single feedback request")
+        let router = ShelfInternalDropRouter(feedback: {})
         let targetID = UUID()
         var highlighted = false, received: Set<UUID> = [], receives = 0
         var mounted = true
@@ -41,6 +47,55 @@ struct ShelfChecks {
         precondition(!router.hasTarget, "unmounted or hidden zones must not receive a transfer")
         router.unregister(targetID)
         print("PASS: recorded drop coordinates route once; outside and unmounted zones rejected")
+
+        let externalRouter = ShelfInternalDropRouter(feedback: {})
+        let copyHeader = UUID(), cutHeader = UUID()
+        var copyFrame: NSRect? = NSRect(x: 20, y: 200, width: 180, height: 34)
+        var cutFrame: NSRect? = NSRect(x: 220, y: 200, width: 180, height: 34)
+        var copyTargeted = false, cutTargeted = false
+        var destinations: [ShelfZone] = [], batchSizes: [Int] = []
+        externalRouter.register(copyHeader, target: .init(frame: { copyFrame }, highlight: { copyTargeted = $0 }, receive: { _ in false }, receiveExternal: { providers in destinations.append(.copy); batchSizes.append(providers.count); return true }))
+        externalRouter.register(cutHeader, target: .init(frame: { cutFrame }, highlight: { cutTargeted = $0 }, receive: { _ in false }, receiveExternal: { providers in destinations.append(.cut); batchSizes.append(providers.count); return true }))
+        let finderProviders = [NSItemProvider(object: URL(fileURLWithPath: "/tmp/finder-one.txt") as NSURL), NSItemProvider(object: URL(fileURLWithPath: "/tmp/finder-two.txt") as NSURL)]
+        externalRouter.update(at: NSPoint(x: 250, y: 215), external: true)
+        precondition(cutTargeted && !copyTargeted, "Finder hover highlights the actual cut header")
+        precondition(externalRouter.finishExternal(at: NSPoint(x: 250, y: 215), providers: finderProviders) == true)
+        precondition(destinations == [.cut] && batchSizes == [2], "route one batch to the pointer's header regardless of active zone")
+        precondition(!cutTargeted && !copyTargeted, "release clears header highlights")
+        swap(&copyFrame, &cutFrame)
+        precondition(externalRouter.finishExternal(at: NSPoint(x: 250, y: 215), providers: finderProviders) == true)
+        precondition(destinations == [.cut, .copy], "custom header order uses live frames")
+        copyFrame = nil
+        precondition(externalRouter.finishExternal(at: NSPoint(x: 250, y: 215), providers: finderProviders) == nil, "hidden header cannot receive Finder files")
+        precondition(externalRouter.finishExternal(at: NSPoint(x: 500, y: 10), providers: finderProviders) == nil, "main shelf area retains its normal fallback")
+        precondition(externalRouter.finishExternal(at: NSPoint(x: 40, y: 215), providers: [provider]) == false, "internal transfers cannot enter external import path")
+        externalRouter.register(cutHeader, target: .init(frame: { cutFrame }, highlight: { _ in }, receive: { _ in false }, receiveExternal: { _ in false }))
+        precondition(externalRouter.finishExternal(at: NSPoint(x: 40, y: 215), providers: finderProviders) == false, "rejected header drops must not fall back into the active zone")
+        print("PASS: Finder header routing, hover, batch, reordered/hidden frames, fallback and internal isolation")
+
+        var entryPulses = 0
+        let hoverRouter = ShelfInternalDropRouter(feedback: { entryPulses += 1 })
+        hoverRouter.register(UUID(), target: .init(frame: { NSRect(x: 0, y: 0, width: 100, height: 30) }, highlight: { _ in }, receive: { _ in true }, receiveExternal: { _ in true }))
+        hoverRouter.register(UUID(), target: .init(frame: { NSRect(x: 120, y: 0, width: 100, height: 30) }, highlight: { _ in }, receive: { _ in true }, receiveExternal: { _ in true }))
+        hoverRouter.update(at: NSPoint(x: 10, y: 10), external: true)
+        hoverRouter.update(at: NSPoint(x: 20, y: 10), external: true)
+        precondition(entryPulses == 1, "one pulse on entry; movement within the same region stays silent")
+        hoverRouter.update(at: NSPoint(x: 130, y: 10), external: true)
+        precondition(entryPulses == 2, "switching targets announces the new target once")
+        hoverRouter.update(at: NSPoint(x: 300, y: 10), external: true)
+        hoverRouter.update(at: NSPoint(x: 130, y: 10), external: true)
+        precondition(entryPulses == 3, "leaving and reentering re-arms feedback")
+        precondition(hoverRouter.finishExternal(at: NSPoint(x: 130, y: 10), providers: finderProviders) == true)
+        precondition(entryPulses == 3, "release does not add a completion pulse")
+        precondition(hoverRouter.finishExternal(at: NSPoint(x: 10, y: 10), providers: finderProviders) == true)
+        precondition(entryPulses == 3, "a drop-only callback must not manufacture an entry pulse")
+        hoverRouter.begin()
+        hoverRouter.update(at: NSPoint(x: 10, y: 10))
+        hoverRouter.update(at: NSPoint(x: 20, y: 10))
+        precondition(entryPulses == 4, "internal drags use the same entry gate")
+        precondition(hoverRouter.finish(at: NSPoint(x: 20, y: 10), token: UUID(), ids: [dragID]))
+        precondition(entryPulses == 4, "internal completion stays silent too")
+        print("PASS: hover-entry haptics, same-region deduplication, target changes, reentry, silent completion")
 
         let legacy = Data("""
         [{"id":"00000000-0000-0000-0000-000000000001","kind":{"type":"text","value":"keep me"},"isTemporary":false}]

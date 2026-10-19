@@ -123,19 +123,14 @@ final class ShelfStateViewModel: ObservableObject {
             let allowed = selection.draggedIDs
             Task { [weak self] in
                 guard let ids = await ShelfInternalTransfer.loadIDs(from: providers, token: token, allowed: allowed), let self else { return }
-                let live = self.items.filter { ids.contains($0.id) }
-                guard live.count == ids.count else { return }
-                clearImportFeedback()
-                guard zone == .copy || live.allSatisfy(\.canMoveOriginal) else {
-                    importFailed = true
-                    importMessage = "剪切区只接收原始文件或文件夹"
-                    return
-                }
-                setZone(zone, for: ids)
+                self.transfer(ids, into: zone)
             }
             return true
         }
         guard !selection.isDragging else { return false }
+        if let accepted = ShelfInternalDropRouter.shared.finishExternal(at: NSEvent.mouseLocation, providers: providers) {
+            return accepted
+        }
         load(providers, into: zone)
         return true
     }

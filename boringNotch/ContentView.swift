@@ -252,8 +252,11 @@ struct ContentView: View {
         .background(dragDetector)
         .environmentObject(vm)
         .onReceive(codexMonitor.$notchState.removeDuplicates()) { state in
+            // A recreated subscription replays the current snapshot when switching pages.
+            // Close only when retries first pause, so manual access remains available.
+            let enteredRetryPause = state.enteredRetryPause(from: codexState)
             if codexState != state { codexState = state }
-            if state.retryPaused {
+            if enteredRetryPause {
                 codexReminderTask?.cancel()
                 codexReminderUntil = .distantPast
                 if coordinator.currentView == .codex && vm.notchState == .open {
@@ -598,6 +601,7 @@ struct ContentView: View {
             codexReminderUntil = Date().addingTimeInterval(duration)
             codexMonitor.beginReminderPresentation()
             doOpen(preferredView: .codex)
+            NotchHapticFeedback.perform(enabled: Defaults[.enableHaptics])
             try? await Task.sleep(for: .seconds(duration))
             guard !Task.isCancelled else { return }
             codexReminderUntil = .distantPast
@@ -742,11 +746,34 @@ struct GeneralDropTargetDelegate: DropDelegate {
     private let types: [UTType] = [ShelfInternalTransfer.type, .fileURL, .url, .utf8PlainText, .plainText, .data]
 
     func validateDrop(info: DropInfo) -> Bool { enabled && info.hasItemsConforming(to: types) }
-    func dropEntered(info: DropInfo) { isTargeted = validateDrop(info: info) }
-    func dropExited(info: DropInfo) { isTargeted = false }
+    func dropEntered(info: DropInfo) {
+        isTargeted = validateDrop(info: info)
+        updateHeaderTarget(info: info)
+    }
+    func dropExited(info: DropInfo) {
+        isTargeted = false
+        if !ShelfSelectionModel.shared.isDragging {
+            // Parent/child drop regions can exchange ownership while the pointer
+            // stays over the same target. Preserve that target without re-announcing.
+            if NSEvent.pressedMouseButtons & 1 == 0 {
+                ShelfInternalDropRouter.shared.clearHighlight()
+            } else {
+                ShelfInternalDropRouter.shared.update(at: NSEvent.mouseLocation, external: true)
+            }
+        }
+    }
+    private func updateHeaderTarget(info: DropInfo) {
+        guard !ShelfSelectionModel.shared.isDragging else { return }
+        if validateDrop(info: info) {
+            ShelfInternalDropRouter.shared.update(at: NSEvent.mouseLocation, external: true)
+        } else {
+            ShelfInternalDropRouter.shared.clearHighlight()
+        }
+    }
     func dropUpdated(info: DropInfo) -> DropProposal? {
+        updateHeaderTarget(info: info)
         // Staging never moves the source. Do not cancel the child shelf destinations.
-        DropProposal(operation: validateDrop(info: info) ? .copy : .cancel)
+        return DropProposal(operation: validateDrop(info: info) ? .copy : .cancel)
     }
     func performDrop(info: DropInfo) -> Bool {
         isTargeted = false

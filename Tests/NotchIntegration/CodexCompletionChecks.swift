@@ -47,6 +47,15 @@ import AppKit
         precondition(m.retryPaused && !m.connected, "appearance cannot restart a paused connection")
         precondition(m.notchState.retryPaused && !m.notchState.hasRelevantTasks && !m.hasRelevantTasks && !m.notchState.hasRunning && m.notchState.attentionCount == 0, "paused retries must hide retained Codex tasks from the shell")
         precondition(!m.sessions.isEmpty, "pause preserves task history for manual reconnect")
-        print("PASS: 13 completion/pause/preference checks")
+        let active = CodexNotchState()
+        let paused = m.notchState
+        precondition(paused.enteredRetryPause(from: active), "first retry timeout closes the automatic page")
+        precondition(!paused.enteredRetryPause(from: paused), "replayed paused snapshot must allow manual navigation")
+        var changedPaused = paused
+        changedPaused.reminderSequence += 1
+        precondition(!changedPaused.enteredRetryPause(from: paused), "unrelated updates cannot close a manually opened paused page")
+        precondition(!active.enteredRetryPause(from: paused), "reconnecting does not close the page")
+        precondition(paused.enteredRetryPause(from: active), "a later retry window can pause again")
+        print("PASS: 18 completion/pause/preference checks")
     }
 }
