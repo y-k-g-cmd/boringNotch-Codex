@@ -35,7 +35,14 @@ ditto --norsrc --noextattr "$app" "$stage/boringNotch Codex.app"
 cp "$root/LICENSE" "$root/NOTICE" "$root/THIRD_PARTY_LICENSES" "$stage/"
 cp "$root/docs/BETA_INSTALL.md" "$stage/INSTALL.md"
 cp "$root/BUILD_DEPENDENCIES.json" "$stage/"
-ditto --norsrc --noextattr "$root/docs/third-party" "$stage/third-party"
+# License files need exact contents, not downloaded-file metadata/ACLs.
+python3 - "$root/docs/third-party" "$stage/third-party" <<'PYLICENSE'
+from pathlib import Path
+import sys
+src,dst=map(Path,sys.argv[1:]);dst.mkdir()
+for p in src.iterdir():
+    if p.is_file(): (dst/p.name).write_bytes(p.read_bytes())
+PYLICENSE
 python3 - "$stage" "$revision" <<'PY'
 from pathlib import Path
 import sys,json,plistlib,subprocess
