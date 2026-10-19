@@ -59,3 +59,10 @@
 - 测试版采用 ad-hoc 本地签名，没有 Developer ID 签名或 Apple 公证；Intel 仅验证包含对应架构，未做硬件实测；上述限制在下载说明明确列出。
 - 包含 GPLv3、第三方声明、12 个精确 SPM 修订的许可副本、构建信息、对应源码归档及 SHA256 校验文件。嵌入媒体框架按已有 BSD 3-Clause 材料附带声明，未声称完成全面法律审计。
 - 不等待所有正式发行矩阵完成即作为 Pre-release 提供测试者试用；复杂多文件剪切、跨卷移动、多屏和不同 Codex 客户端仍保留为已知验收边界。自动更新保持关闭。
+
+### 公开发布结果
+
+- 2026-10-19 已公开 [v0.1.0-beta.1 Pre-release](https://github.com/y-k-g-cmd/boringNotch-Codex/releases/tag/v0.1.0-beta.1)，源码 tag 固定于 `739d571e7aa049e1ffdc080b8bc27544e515a9a6`。
+- 5 个附件上传后的 GitHub SHA256／大小均与本地相符；无登录下载通用 ZIP 后再次核对 SHA256，解压应用的严格签名检查通过。
+- 对应提交的 GitHub 源码检查通过；macOS 完整构建在本机 Xcode 完成，不把跳过的云端 macOS job 记为已执行。
+- 应用下载包 SHA256：`71e8a2eaa2899f5ae4c9aac9b84a179bb11c3719e73468266e96565d0263f81b`。自动更新仍关闭。
