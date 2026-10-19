@@ -5,6 +5,9 @@ if [[ $# != 3 ]]; then
   exit 2
 fi
 root="$(cd "$(dirname "$0")/.." && pwd)"
+if [[ -z "${DEVELOPER_DIR:-}" && -d /Applications/Xcode.app/Contents/Developer ]]; then
+  export DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer
+fi
 app="$1"
 out="$2"
 revision="$(git -C "$root" rev-parse --verify "$3^{commit}")"
