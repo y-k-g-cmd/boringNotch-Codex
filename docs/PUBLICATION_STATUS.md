@@ -66,3 +66,12 @@
 - 5 个附件上传后的 GitHub SHA256／大小均与本地相符；无登录下载通用 ZIP 后再次核对 SHA256，解压应用的严格签名检查通过。
 - 对应提交的 GitHub 源码检查通过；macOS 完整构建在本机 Xcode 完成，不把跳过的云端 macOS job 记为已执行。
 - 应用下载包 SHA256：`71e8a2eaa2899f5ae4c9aac9b84a179bb11c3719e73468266e96565d0263f81b`。自动更新仍关闭。
+
+## Beta 2：v0.1.0-beta.2（2026-10-19）
+
+- 已公开发布 Pre-release：https://github.com/y-k-g-cmd/boringNotch-Codex/releases/tag/v0.1.0-beta.2 。Beta 1 保留原样。
+- 应用版本 0.1.0（271.21），精确源码及 tag 指向 91190523529eb050c4180e94952edcc7946e6b13；后续 main 的安装文档更新不改变该构建来源。
+- 新增 DMG、失败拖放状态恢复及悬停移除按钮；用户已确认本地身份下失败后正常收起，以及叉号移除后原文件保留。
+- 6 个附件：DMG、ZIP、对应源码、BUILD-INFO.json、INSTALL.md、SHA256SUMS.txt。全部以未登录方式重新下载，SHA256 与本地一致；GitHub 服务端摘要也一致。
+- 公开版双架构 Archive、严格签名、镜像校验及挂载后应用严格签名通过；macOS 15 起，Intel 未做硬件实测。公开身份完整授权及拖放验收仍不等同于旧本地身份的实测。
+- main 文档提交 26b4f06 的 GitHub 源码检查通过（run 39225692322）；未开启 Pages／自动更新，仍为 ad-hoc 签名，未经过 Developer ID 签名或 Apple 公证。
