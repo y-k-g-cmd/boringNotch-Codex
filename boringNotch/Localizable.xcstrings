@@ -1,6 +1,50 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+  "Remove from shelf": {
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Remove from shelf"
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "从文件架移除"
+        }
+      },
+      "zh-Hant": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "從檔案架移除"
+        }
+      }
+    }
+  },
+  "Remove from shelf (keeps original)": {
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Remove from shelf (keeps original)"
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "从文件架移除（保留原文件）"
+        }
+      },
+      "zh-Hant": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "從檔案架移除（保留原始檔案）"
+        }
+      }
+    }
+  },
     "" : {
       "localizations" : {
         "ar" : {

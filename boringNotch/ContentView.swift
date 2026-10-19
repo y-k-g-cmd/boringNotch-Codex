@@ -33,6 +33,7 @@ struct ContentView: View {
     @State private var hoverTask: Task<Void, Never>?
     @State private var isHovering: Bool = false
     @State private var anyDropDebounceTask: Task<Void, Never>?
+    @State private var releasedShelfDragSamples = 0
 
     @State private var gestureProgress: CGFloat = .zero
 
@@ -185,6 +186,24 @@ struct ContentView: View {
                                     }
                                 }
                             }
+                        }
+                    }
+                    // Failed provider reads can omit destination exit callbacks.
+                    // Check physical release independently, also during event tracking.
+                    .onReceive(Timer.publish(every: 0.2, on: .main, in: .common).autoconnect()) { _ in
+                        guard coordinator.currentView == .shelf, vm.notchState == .open,
+                              !CGEventSource.buttonState(.combinedSessionState, button: .left),
+                              !ShelfSelectionModel.shared.isDragging else {
+                            releasedShelfDragSamples = 0
+                            return
+                        }
+                        releasedShelfDragSamples = min(releasedShelfDragSamples + 1, 2)
+                        guard releasedShelfDragSamples == 2 else { return }
+                        if vm.anyDropZoneTargeting || ShelfInternalDropRouter.shared.hasTarget {
+                            ShelfDragDiagnostics.record("release-recovery drag=\(vm.dragDetectorTargeting) general=\(vm.generalDropTargeting) share=\(vm.dropZoneTargeting) hover=\(vm.isMouseHovering())")
+                            NotificationCenter.default.post(name: .shelfDragDidFinish, object: nil)
+                        } else if !vm.isMouseHovering() {
+                            closeAfterHover()
                         }
                     }
                     .onReceive(NotificationCenter.default.publisher(for: .shelfDragDidFinish)) { _ in

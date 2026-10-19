@@ -16,6 +16,7 @@ struct ShelfItemView: View {
     @ObservedObject var selection = ShelfSelectionModel.shared
     @StateObject private var viewModel: ShelfItemViewModel
     @EnvironmentObject private var quickLookService: QuickLookService
+    @State private var isHovered = false
     @State private var showStack = false
     @State private var cachedPreviewImage: NSImage?
     @State private var debouncedDropTarget = false
@@ -62,6 +63,28 @@ struct ShelfItemView: View {
                     .padding(.horizontal, 5)
             }
         }
+        .overlay(alignment: .topTrailing) {
+            Button {
+                ShelfActionService.remove(item)
+            } label: {
+                Image(systemName: "xmark")
+                    .font(.system(size: 10, weight: .bold))
+                    .foregroundStyle(.white)
+                    .frame(width: 22, height: 22)
+                    .background(.black.opacity(0.85), in: Circle())
+                    .overlay(Circle().strokeBorder(.white.opacity(0.35), lineWidth: 1))
+                    .contentShape(Circle())
+            }
+            .buttonStyle(.plain)
+            .help("Remove from shelf (keeps original)")
+            .accessibilityLabel(Text("Remove from shelf"))
+            .accessibilityValue(item.displayName)
+            .padding(4)
+            .opacity(isHovered && !selection.isDragging ? 1 : 0)
+            .allowsHitTesting(isHovered && !selection.isDragging)
+            .accessibilityHidden(!isHovered || selection.isDragging)
+        }
+        .onHover { isHovered = $0 }
         .onChange(of: viewModel.isDropTargeted) { _, targeted in
             vm.dragDetectorTargeting = targeted
             // Debounce drop target state changes
