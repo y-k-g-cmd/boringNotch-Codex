@@ -10,7 +10,7 @@ xcrun swiftc -swift-version 5 -module-cache-path "$build/module-cache" \
   "$root/Tests/NotchIntegration/NotchStreamChecks.swift" -o "$build/notch-stream-checks"
 "$build/notch-stream-checks"
 
-for check in CodexCompletionChecks CodexReconnectChecks; do
+for check in CodexCompletionChecks CodexReconnectChecks CodexFrameChecks; do
   xcrun swiftc -swift-version 5 -module-cache-path "$build/module-cache" \
     "$root/boringNotch/XPCHelperClient/BoringNotchXPCHelperProtocol.swift" \
     "$root/boringNotch/extensions/PanGesture.swift" \

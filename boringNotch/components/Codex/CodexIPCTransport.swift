@@ -23,7 +23,12 @@ final class CodexIPCTransport: @unchecked Sendable {
     private var pendingActions: [String: (action: CodexRequestAction, deadline: TimeInterval)] = [:]
     private var isStopped: Bool { stopLock.lock(); defer { stopLock.unlock() }; return stopped }
     private let retryTimeout: TimeInterval
-    private var didInitialize = false
+    // Same framing limit as the installed desktop reader (256 MiB).
+    static let maximumFrameBytes = 256 * 1024 * 1024
+    static func supportsFrameLength(_ length: Int) -> Bool {
+        length > 0 && length <= maximumFrameBytes
+    }
+    private var initializedAt: TimeInterval?
     private var attemptDeadline = TimeInterval.infinity
     private let home: URL
     private let socketConnector: (() throws -> Int32)?
@@ -83,7 +88,7 @@ final class CodexIPCTransport: @unchecked Sendable {
                 deliver(.retryPaused)
                 return
             }
-            didInitialize = false
+            initializedAt = nil
             attemptDeadline = ProcessInfo.processInfo.systemUptime + window.remaining(at: ProcessInfo.processInfo.systemUptime)
             do { try connectAndRead() }
             catch {
@@ -92,8 +97,12 @@ final class CodexIPCTransport: @unchecked Sendable {
                 deliver(.connection(false, label))
             }
             guard !isStopped else { return }
-            // After a successful live connection drops, grant a fresh retry window.
-            if didInitialize { window.disconnectedAfterSuccess(at: ProcessInfo.processInfo.systemUptime) }
+            // A handshake followed immediately by a bad frame is not a stable
+            // connection: it must not renew the five-minute retry budget forever.
+            if let initializedAt {
+                let now = ProcessInfo.processInfo.systemUptime
+                window.disconnectedAfterSuccess(at: now, connectedFor: now - initializedAt)
+            }
             Thread.sleep(forTimeInterval: min(3, window.remaining(at: ProcessInfo.processInfo.systemUptime)))
         }
     }
@@ -152,11 +161,11 @@ final class CodexIPCTransport: @unchecked Sendable {
                 pending.append(contentsOf: buffer.prefix(count))
                 while pending.count >= 4 {
                     let length = pending.prefix(4).enumerated().reduce(0) { $0 | (Int($1.element) << ($1.offset * 8)) }
-                    guard length > 0, length <= 64 * 1024 * 1024 else { throw Failure.invalidFrame }
+                    guard Self.supportsFrameLength(length) else { throw Failure.invalidFrame(length) }
                     guard pending.count >= length + 4 else { break }
                     let frame = Data(pending.dropFirst(4).prefix(length))
                     pending.removeFirst(4 + length)
-                    guard let message = try JSONSerialization.jsonObject(with: frame) as? [String: Any] else { throw Failure.invalidFrame }
+                    guard let message = try JSONSerialization.jsonObject(with: frame) as? [String: Any] else { throw Failure.invalidPayload }
                     try handle(message, fd: fd)
                 }
             }
@@ -187,7 +196,7 @@ final class CodexIPCTransport: @unchecked Sendable {
         if type == "response", method == "initialize",
            let result = message["result"] as? [String: Any], let id = result["clientId"] as? String {
             clientID = id
-            didInitialize = true
+            initializedAt = ProcessInfo.processInfo.systemUptime
             deliver(.connection(true, "已连接 Codex"))
             return
         }
@@ -275,14 +284,16 @@ final class CodexIPCTransport: @unchecked Sendable {
     }
 
     private enum Failure: Error {
-        case unavailable, disconnected, invalidFrame
+        case unavailable, disconnected, invalidPayload
+        case invalidFrame(Int)
         case system(String, Int32)
 
         var label: String {
             switch self {
             case .system(let operation, let code):
                 return "Codex \(operation)失败（\(code)），正在重试"
-            case .invalidFrame: return "Codex 状态数据无效，正在重试"
+            case .invalidFrame(let length): return "Codex 状态消息长度异常（\(length) 字节），正在重试"
+            case .invalidPayload: return "Codex 状态数据无效，正在重试"
             default: return "Codex 未连接，正在重试"
             }
         }

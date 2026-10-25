@@ -379,7 +379,11 @@ struct CodexReconnectWindow {
     }
     func remaining(at now: TimeInterval) -> TimeInterval { max(0, timeout - (now - failedSince)) }
     func canAttempt(at now: TimeInterval) -> Bool { remaining(at: now) > 0 }
-    mutating func disconnectedAfterSuccess(at now: TimeInterval) { failedSince = now }
+    static let stableConnectionDuration: TimeInterval = 15
+    mutating func disconnectedAfterSuccess(at now: TimeInterval, connectedFor duration: TimeInterval) {
+        guard duration.isFinite, duration >= Self.stableConnectionDuration else { return }
+        failedSince = now
+    }
 }
 
 
