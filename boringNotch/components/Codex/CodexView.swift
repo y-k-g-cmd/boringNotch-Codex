@@ -3,12 +3,17 @@ import SwiftUI
 struct CodexView: View {
     @ObservedObject var monitor: CodexMonitor = .shared
     @State private var requestSessionID: String?
+    @State private var requestSelectedAutomatically = false
     @State private var visibleTaskID: String?
     @State private var taskScrollIndex: Double = 0
     @AppStorage("codexTaskNavigation") private var codexTaskNavigation = "region"
 
     private var requestSignature: String {
-        monitor.sessions.map { $0.id + $0.requests.map { String($0.rawData.hashValue) }.joined() }.joined(separator: ";")
+        monitor.sessions.map { session in
+            let requests = session.requests.map { String($0.rawData.hashValue) }.joined()
+            let lineage = session.isSubagent ? ":child:" : ":root:"
+            return session.id + lineage + requests
+        }.joined(separator: ";")
     }
     private var requestSession: CodexSession? {
         monitor.sessions.first { $0.id == requestSessionID && !$0.requests.isEmpty }
@@ -103,7 +108,7 @@ struct CodexView: View {
                                 }
                                 .overlay(alignment: .bottomTrailing) {
                                     if !session.requests.isEmpty {
-                                        Button("处理请求") { requestSessionID = session.id }
+                                        Button("处理请求") { requestSelectedAutomatically = false; requestSessionID = session.id }
                                             .buttonStyle(.bordered).controlSize(.mini)
                                             .font(.system(size: 9)).padding(6)
                                             .disabled(!monitor.connected)
@@ -165,8 +170,10 @@ struct CodexView: View {
     }
 
     private func selectPendingRequest() {
-        if requestSession != nil { return }
-        requestSessionID = monitor.sessions.first { $0.activity.needsAttention && !$0.requests.isEmpty }?.id
+        if let current = requestSession,
+           !requestSelectedAutomatically || !current.isSubagent { return }
+        requestSessionID = monitor.sessions.first { !$0.isSubagent && $0.activity.needsAttention && !$0.requests.isEmpty }?.id
+        requestSelectedAutomatically = requestSessionID != nil
     }
 
     private func revealCompletion(using proxy: ScrollViewProxy) {

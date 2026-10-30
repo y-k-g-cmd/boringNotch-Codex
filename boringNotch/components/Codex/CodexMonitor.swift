@@ -15,6 +15,7 @@ final class CodexMonitor: ObservableObject {
     @Published private(set) var completionFocus: CodexCompletionFocus?
     @Published private(set) var submissions: [String: Submission] = [:]
     private var pendingCompletionIDs: Set<String> = []
+    private var pendingReminderIDs: Set<String> = []
     @Published private(set) var notchState = CodexNotchState()
     @Published private(set) var sessions: [CodexSession] = []
     @Published private(set) var connected = false
@@ -30,13 +31,15 @@ final class CodexMonitor: ObservableObject {
     private var transport: CodexIPCTransport?
     private var pendingReminder: Task<Void, Never>?
 
-    var hasUnreadCompleted: Bool { sessions.contains { $0.activity == .completed && unread.contains($0.id) } }
-    var attentionCount: Int { sessions.filter { $0.activity.needsAttention }.count }
+    private var reminderSessions: [CodexSession] { sessions.filter { !$0.isSubagent } }
+
+    var hasUnreadCompleted: Bool { reminderSessions.contains { $0.activity == .completed && unread.contains($0.id) } }
+    var attentionCount: Int { reminderSessions.filter { $0.activity.needsAttention }.count }
     var hasRelevantTasks: Bool {
-        !retryPaused && sessions.contains { $0.activity == .running || $0.activity.needsAttention || unread.contains($0.id) }
+        !retryPaused && reminderSessions.contains { $0.activity == .running || $0.activity.needsAttention || unread.contains($0.id) }
     }
-    var hasBadge: Bool { attentionCount > 0 || !unread.isEmpty }
-    var reminderNeedsAttention: Bool { sessions.contains { $0.activity.needsAttention } }
+    var hasBadge: Bool { attentionCount > 0 || reminderSessions.contains { unread.contains($0.id) } }
+    var reminderNeedsAttention: Bool { reminderSessions.contains { $0.activity.needsAttention } }
 
     init() {}
 
@@ -91,6 +94,7 @@ final class CodexMonitor: ObservableObject {
             self.sessions.removeAll()
             self.unread.removeAll()
             self.pendingCompletionIDs.removeAll()
+            self.pendingReminderIDs.removeAll()
             self.completionHighlights.removeAll()
             self.completionFocus = nil
             self.policy = CodexReminderPolicy()
@@ -132,24 +136,35 @@ final class CodexMonitor: ObservableObject {
             connectionLabel = "5 分钟内未连上，已暂停；请手动连接"
             transport?.stop()
             pendingReminder?.cancel()
+            pendingReminderIDs.removeAll()
             pendingCompletionIDs.removeAll()
             completionHighlights.removeAll()
         case .connection(let connected, let label):
             self.connected = connected
             connectionLabel = label
         case .removed(let key):
+            pendingReminderIDs.remove(key)
             submissions.removeValue(forKey: key)
             sessions.removeAll { $0.id == key }
             unread.remove(key)
             pendingCompletionIDs.remove(key)
             completionHighlights.removeValue(forKey: key)
         case .session(let session, let baseline):
+            // Lineage may arrive after the first snapshot; retract any child alert.
+            if session.isSubagent {
+                pendingReminderIDs.remove(session.id)
+                unread.remove(session.id)
+                pendingCompletionIDs.remove(session.id)
+                completionHighlights.removeValue(forKey: session.id)
+                if completionFocus?.sessionID == session.id { completionFocus = nil }
+            }
             if let submission = submissions[session.id],
                session.ownerClientID != submission.action.ownerClientID || !session.requests.contains(submission.action.request) {
                 submissions.removeValue(forKey: session.id)
             }
             guard sessions.first(where: { $0.id == session.id }) != session else { return }
             if session.activity != .completed {
+                if !session.activity.needsAttention { pendingReminderIDs.remove(session.id) }
                 pendingCompletionIDs.remove(session.id)
                 completionHighlights.removeValue(forKey: session.id)
             }
@@ -157,6 +172,7 @@ final class CodexMonitor: ObservableObject {
             var next = sessions.filter { $0.id != session.id }
             next.append(session)
             next.sort {
+                if $0.isSubagent != $1.isSubagent { return !$0.isSubagent }
                 if $0.activity.needsAttention != $1.activity.needsAttention { return $0.activity.needsAttention }
                 return $0.updatedAt > $1.updatedAt
             }
@@ -166,11 +182,17 @@ final class CodexMonitor: ObservableObject {
             unread.insert(session.id)
             // Coalesce bursts, retaining every unread card.
             guard remindersEnabled else { return }
+            pendingReminderIDs.insert(session.id)
             if session.activity == .completed { pendingCompletionIDs.insert(session.id) }
             pendingReminder?.cancel()
             pendingReminder = Task { [weak self] in
                 try? await Task.sleep(for: .milliseconds(500))
                 guard !Task.isCancelled, let self, self.connected, self.hasBadge, self.remindersEnabled else { return }
+                let eligible = self.sessions.contains {
+                    !$0.isSubagent && self.pendingReminderIDs.contains($0.id) && self.unread.contains($0.id)
+                }
+                self.pendingReminderIDs.removeAll()
+                guard eligible else { return }
                 self.reminderSequence += 1
                 self.publishNotchState()
             }
@@ -180,7 +202,7 @@ final class CodexMonitor: ObservableObject {
     /// Called when the notch actually presents a reminder, after any drag/share delay.
     func beginReminderPresentation() {
         let eligible = sessions.filter {
-            pendingCompletionIDs.contains($0.id) && $0.activity == .completed && unread.contains($0.id)
+            !$0.isSubagent && pendingCompletionIDs.contains($0.id) && $0.activity == .completed && unread.contains($0.id)
         }
         pendingCompletionIDs.removeAll()
         completionFocus = nil
@@ -230,7 +252,7 @@ final class CodexMonitor: ObservableObject {
 
     func markCompletedRead() {
         defer { publishNotchState() }
-        let pending = Set(sessions.filter { $0.activity.needsAttention }.map(\.id))
+        let pending = Set(reminderSessions.filter { $0.activity.needsAttention }.map(\.id))
         unread.formIntersection(pending)
         pendingCompletionIDs.formIntersection(pending)
         completionHighlights = completionHighlights.filter { pending.contains($0.key) }

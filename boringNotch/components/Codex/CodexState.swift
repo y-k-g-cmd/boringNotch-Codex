@@ -29,6 +29,19 @@ struct CodexSession: Identifiable, Equatable {
     var updatedAt: Date
     var ownerClientID = ""
     var requests: [CodexPendingRequest] = []
+    var isSubagent = false
+
+    /// Match desktop lineage metadata, never a display title or an ordinary fork.
+    static func isSubagentState(_ state: [String: Any]) -> Bool {
+        if let parent = state["parentThreadId"] as? String,
+           !parent.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty { return true }
+        if let source = state["source"] as? [String: Any],
+           let child = source["subAgent"], !(child is NSNull) { return true }
+        if let source = state["source"] as? String {
+            return ["subAgent", "subAgentReview", "subAgentCompact", "subAgentThreadSpawn", "subAgentOther"].contains(source)
+        }
+        return false
+    }
 
     static func parse(_ state: [String: Any], threadID: String, hostID: String, ownerClientID: String = "") -> CodexSession {
         var turns = state["turns"] as? [[String: Any]] ?? []
@@ -74,6 +87,7 @@ struct CodexSession: Identifiable, Equatable {
                             activity: activity, turnID: turn?["turnId"] as? String,
                             summary: String(summary.prefix(500)),
                             updatedAt: Date(timeIntervalSince1970: state["updatedAt"] as? Double ?? 0))
+        session.isSubagent = isSubagentState(state)
         session.ownerClientID = ownerClientID
         session.requests = (state["requests"] as? [[String: Any]] ?? []).compactMap(CodexPendingRequest.init)
             .filter { request in
@@ -102,6 +116,7 @@ struct CodexReminderPolicy {
 
     mutating func observe(_ session: CodexSession, baseline: Bool = false) -> Bool {
         let old = previous.updateValue(session, forKey: session.id)
+        guard !session.isSubagent else { return false }
         if session.activity.needsAttention {
             return old?.activity != session.activity || old?.turnID != session.turnID || old?.requests != session.requests
         }
@@ -350,6 +365,7 @@ struct CodexNotchState: Equatable {
 
     init() {}
     init(sessions: [CodexSession], connected: Bool, unread: Set<String>, reminderSequence: Int, retryPaused: Bool = false) {
+        let sessions = sessions.filter { !$0.isSubagent }
         self.retryPaused = retryPaused
         self.connected = connected
         self.hasRunning = !retryPaused && sessions.contains { $0.activity == .running }
