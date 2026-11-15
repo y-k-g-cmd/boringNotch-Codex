@@ -23,7 +23,6 @@ struct InlineHUD: View {
                             if icon.isEmpty {
                                 Image(systemName: SpeakerSymbol(value))
                                     .contentTransition(.interpolate)
-                                    .symbolVariant(value > 0 ? .none : .slash)
                                     .frame(width: 20, height: 15, alignment: .leading)
                             } else {
                                 Image(systemName: icon)
@@ -43,8 +42,7 @@ struct InlineHUD: View {
                         case .mic:
                             Image(systemName: "mic")
                                 .symbolRenderingMode(.hierarchical)
-                                .symbolVariant(value > 0 ? .none : .slash)
-                                .contentTransition(.interpolate)
+                                    .contentTransition(.interpolate)
                                 .frame(width: 20, height: 15, alignment: .center)
                         default:
                             EmptyView()
@@ -82,6 +80,8 @@ struct InlineHUD: View {
                                 VolumeManager.shared.setAbsolute(Float32(v))
                             } else if type == .brightness {
                                 BrightnessManager.shared.setAbsolute(value: Float32(v))
+                            } else if type == .backlight {
+                                KeyboardBacklightManager.shared.setAbsolute(value: Float32(v))
                             }
                         })
                         if (type == .volume && value.isZero) {

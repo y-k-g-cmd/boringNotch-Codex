@@ -1,6 +1,582 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+  "向左跑": {
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Run to the left"
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "向左跑"
+        }
+      }
+    }
+  },
+  "帧率上限": {
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Maximum frame rate"
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "帧率上限"
+        }
+      }
+    }
+  },
+  "使用完整卡片展开动画": {
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Expand with the full card animation"
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "使用完整卡片展开动画"
+        }
+      }
+    }
+  },
+  "仅在手动按媒体键或拖动控制中心滑块时显示，自动亮度变化不提示。": {
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Only manual media keys and Control Center slider changes show indicators; automatic brightness changes stay silent."
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "仅在手动按媒体键或拖动控制中心滑块时显示，自动亮度变化不提示。"
+        }
+      }
+    }
+  },
+  "Keyboard backlight": {
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Keyboard backlight"
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "键盘背光"
+        }
+      }
+    }
+  },
+  "显示在菜单栏": {
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Show in menu bar"
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "显示在菜单栏"
+        }
+      }
+    }
+  },
+  "在 Codex 卡片页显示摘要": {
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Show summary on the Codex page"
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "在 Codex 卡片页显示摘要"
+        }
+      }
+    }
+  },
+  "显示 CPU 百分比": {
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Show CPU percentage"
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "显示 CPU 百分比"
+        }
+      }
+    }
+  },
+  "跑猫大小": {
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Cat size"
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "跑猫大小"
+        }
+      }
+    }
+  },
+  "跑猫速度": {
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Running speed"
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "跑猫速度"
+        }
+      }
+    }
+  },
+  "动画流畅度": {
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Animation frame rate"
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "动画流畅度"
+        }
+      }
+    }
+  },
+  "额度显示方式": {
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Quota display"
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "额度显示方式"
+        }
+      }
+    }
+  },
+  "剩余": {
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Remaining"
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "剩余"
+        }
+      }
+    }
+  },
+  "已用": {
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Used"
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "已用"
+        }
+      }
+    }
+  },
+  "额度": {
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Quota"
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "额度"
+        }
+      }
+    }
+  },
+  "刷新间隔：%lld 分钟": {
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Refresh interval: %lld minutes"
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "刷新间隔：%lld 分钟"
+        }
+      }
+    }
+  },
+  "通过本机 Codex CLI 查询额度；遵循系统减少动态效果设置。": {
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Queries usage through the local Codex CLI; respects Reduce Motion."
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "通过本机 Codex CLI 查询额度；遵循系统减少动态效果设置。"
+        }
+      }
+    }
+  },
+  "刘海系统提示": {
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Notch system indicators"
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "刘海系统提示"
+        }
+      }
+    }
+  },
+  "显示系统调整提示": {
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Show system adjustment indicators"
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "显示系统调整提示"
+        }
+      }
+    }
+  },
+  "音量与静音": {
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Volume and mute"
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "音量与静音"
+        }
+      }
+    }
+  },
+  "屏幕亮度": {
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Display brightness"
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "屏幕亮度"
+        }
+      }
+    }
+  },
+  "键盘背光": {
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Keyboard backlight"
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "键盘背光"
+        }
+      }
+    }
+  },
+  "提示停留：%.1f 秒": {
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Display duration: %.1f seconds"
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "提示停留：%.1f 秒"
+        }
+      }
+    }
+  },
+  "包括控制中心中的调整。无需辅助功能权限；未启用替换时保留 macOS 原生提示。": {
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Includes Control Center changes. Accessibility is not required; macOS indicators remain unless replacement is enabled."
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "包括控制中心中的调整。无需辅助功能权限；未启用替换时保留 macOS 原生提示。"
+        }
+      }
+    }
+  },
+  "预览音量": {
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Preview volume"
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "预览音量"
+        }
+      }
+    }
+  },
+  "预览亮度": {
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Preview brightness"
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "预览亮度"
+        }
+      }
+    }
+  },
+  "预览背光": {
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Preview keyboard light"
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "预览背光"
+        }
+      }
+    }
+  },
+  "预览只展示提示，不改变实际音量或亮度。": {
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Previews do not change actual volume or brightness."
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "预览只展示提示，不改变实际音量或亮度。"
+        }
+      }
+    }
+  },
+  "系统与用量": {
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "System & usage"
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "系统与用量"
+        }
+      }
+    }
+  },
+  "菜单栏跑猫与 CPU 状态": {
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Menu bar runner and CPU usage"
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "菜单栏跑猫与 CPU 状态"
+        }
+      }
+    }
+  },
+  "显示 Codex 剩余额度": {
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Show Codex remaining quota"
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "显示 Codex 剩余额度"
+        }
+      }
+    }
+  },
+  "内置于 boringNotch；跑猫速度随 CPU 负载变化，无需启动另外两个应用。": {
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Built into boringNotch. The cat runs faster with CPU load; no other apps are needed."
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "内置于 boringNotch；跑猫速度随 CPU 负载变化，无需启动另外两个应用。"
+        }
+      }
+    }
+  },
+  "用量每 5 分钟刷新，通过本机 Codex CLI 查询；不读取或显示登录凭据。": {
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Usage refreshes every 5 minutes through the local Codex CLI; credentials are not read or displayed by boringNotch."
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "用量每 5 分钟刷新，通过本机 Codex CLI 查询；不读取或显示登录凭据。"
+        }
+      }
+    }
+  },
+  "剩余额度": {
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Remaining quota"
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "剩余额度"
+        }
+      }
+    }
+  },
+  "刷新用量": {
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Refresh usage"
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "刷新用量"
+        }
+      }
+    }
+  },
+  "用量读取失败，请确认 Codex 已登录后重试": {
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Unable to load usage. Sign into Codex and try again."
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "用量读取失败，请确认 Codex 已登录后重试"
+        }
+      }
+    }
+  },
   "Remove from shelf": {
     "localizations": {
       "en": {

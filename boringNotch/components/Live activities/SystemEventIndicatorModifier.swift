@@ -30,7 +30,6 @@ struct SystemEventIndicatorModifier: View {
                     if icon.isEmpty {
                         Image(systemName: SpeakerSymbol(value))
                             .contentTransition(.interpolate)
-                            .symbolVariant(value > 0 ? .none : .slash)
                             .frame(width: 20, height: 15, alignment: .leading)
                     } else {
                         Image(systemName: icon)
@@ -148,5 +147,41 @@ struct DraggableProgressBar: View {
         
         value = max(0, min(newValue, 1))
         onChange?(value)
+    }
+}
+
+
+struct SystemHUDCard: View {
+    let type: SneakContentType
+    let value: CGFloat
+    private var icon: String {
+        switch type {
+        case .volume: return value <= 0 ? "speaker.slash.fill" : value < 0.33 ? "speaker.wave.1.fill" : value < 0.66 ? "speaker.wave.2.fill" : "speaker.wave.3.fill"
+        case .brightness: return "sun.max.fill"
+        default: return "light.max"
+        }
+    }
+    var body: some View {
+        VStack(spacing: 16) {
+            HStack(spacing: 12) {
+                Image(systemName: icon).font(.system(size: 26)).frame(width: 38)
+                Text(type == .volume ? "Volume" : type == .brightness ? "Brightness" : "Keyboard backlight")
+                    .font(.system(size: 17, weight: .semibold))
+                Spacer()
+                Text("\(Int(min(1, max(0, value)) * 100))%")
+                    .font(.system(size: 22, weight: .medium, design: .rounded)).monospacedDigit()
+                    .contentTransition(.numericText())
+            }
+            GeometryReader { geometry in
+                ZStack(alignment: .leading) {
+                    Capsule().fill(.white.opacity(0.12))
+                    Capsule().fill(Defaults[.systemEventIndicatorUseAccent] ? Color.effectiveAccent : .white)
+                        .frame(width: geometry.size.width * min(1, max(0, value)))
+                }
+            }.frame(height: 7)
+        }
+        .padding(.horizontal, 34).frame(maxWidth: .infinity, maxHeight: .infinity)
+        .foregroundStyle(.white)
+        .animation(.linear(duration: 0.08), value: value)
     }
 }

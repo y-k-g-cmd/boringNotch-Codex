@@ -37,6 +37,7 @@ struct CodexView: View {
                 Text(monitor.connectionLabel).font(.system(size: 10)).foregroundStyle(.secondary)
                     .lineLimit(1).truncationMode(.tail)
                 Spacer()
+                NotchResourceBadge()
                 Button { monitor.reconnect() } label: {
                     Label(monitor.connected ? "重新连接" : "连接 Codex", systemImage: "arrow.triangle.2.circlepath")
                 }

@@ -18,6 +18,13 @@ import UniformTypeIdentifiers
 struct ContentView: View {
     @EnvironmentObject var vm: BoringViewModel
     private let codexMonitor = CodexMonitor.shared
+    @AppStorage("systemHUDExpand") private var expandSystemHUD = true
+    @State private var systemHUDOpened = false
+    @State private var presentedHUDType: SneakContentType = .volume
+    @State private var presentedHUDValue: CGFloat = 0
+    @State private var hudCloseTask: Task<Void, Never>?
+    private var isSystemHUD: Bool { [.volume, .brightness, .backlight].contains(coordinator.sneakPeek.type) }
+    private var expandedHUDRequested: Bool { expandSystemHUD && coordinator.sneakPeek.show && isSystemHUD }
     @State private var codexState = CodexNotchState()
     @State private var codexReminderTask: Task<Void, Never>?
     @State private var codexReminderUntil = Date.distantPast
@@ -163,6 +170,8 @@ struct ContentView: View {
                     }
                     .onAppear {
                         codexMonitor.start()
+                        NotchResources.shared.start()
+                        SystemHUDMonitor.shared.start()
                         Task {
                             try? await Task.sleep(for: .seconds(1))
                             await MainActor.run {
@@ -220,6 +229,8 @@ struct ContentView: View {
                             if vm.notchState == .open { closeAfterHover() }
                         }
                     }
+                    .onReceive(coordinator.$sneakPeek) { state in handleSystemHUD(state) }
+                    .onChange(of: coordinator.currentView) { systemHUDOpened = false }
                     .onChange(of: codexState.reminderSequence) { showCodexReminder() }
                     .onChange(of: vm.notchState) { _, newState in
                         if newState == .closed && isHovering {
@@ -325,7 +336,7 @@ struct ContentView: View {
                     .padding(.top, 40)
                     Spacer()
                 } else {
-                    if vm.notchState == .closed && codexState.hasRelevantTasks && !musicManager.isPlaying && !vm.hideOnClosed {
+                    if vm.notchState == .closed && codexState.hasRelevantTasks && !musicManager.isPlaying && !vm.hideOnClosed && !(!expandSystemHUD && coordinator.sneakPeek.show && isSystemHUD) {
                         HStack(spacing: 0) {
                             Image(systemName: "chevron.left.forwardslash.chevron.right")
                                 .font(.system(size: 10, weight: .semibold)).frame(width: 24)
@@ -365,7 +376,7 @@ struct ContentView: View {
                             .frame(width: 76, alignment: .trailing)
                         }
                         .frame(height: vm.effectiveClosedNotchHeight, alignment: .center)
-                      } else if coordinator.sneakPeek.show && Defaults[.inlineHUD] && (coordinator.sneakPeek.type != .music) && (coordinator.sneakPeek.type != .battery) && vm.notchState == .closed {
+                      } else if coordinator.sneakPeek.show && !expandedHUDRequested && Defaults[.inlineHUD] && (coordinator.sneakPeek.type != .music) && (coordinator.sneakPeek.type != .battery) && vm.notchState == .closed {
                           InlineHUD(type: $coordinator.sneakPeek.type, value: $coordinator.sneakPeek.value, icon: $coordinator.sneakPeek.icon, hoverAnimation: $isHovering, gestureProgress: $gestureProgress)
                               .transition(.opacity)
                       } else if (!coordinator.expandingView.show || coordinator.expandingView.type == .music) && vm.notchState == .closed && (musicManager.isPlaying || !musicManager.isPlayerIdle) && coordinator.musicLiveActivityEnabled && !vm.hideOnClosed {
@@ -381,7 +392,7 @@ struct ContentView: View {
                            Rectangle().fill(.clear).frame(width: vm.closedNotchSize.width - 20, height: vm.effectiveClosedNotchHeight)
                        }
 
-                      if coordinator.sneakPeek.show {
+                      if coordinator.sneakPeek.show && !expandedHUDRequested {
                           if (coordinator.sneakPeek.type != .music) && (coordinator.sneakPeek.type != .battery) && !Defaults[.inlineHUD] && vm.notchState == .closed {
                               SystemEventIndicatorModifier(
                                   eventType: $coordinator.sneakPeek.type,
@@ -393,6 +404,8 @@ struct ContentView: View {
                                           VolumeManager.shared.setAbsolute(Float32(newVal))
                                       case .brightness:
                                           BrightnessManager.shared.setAbsolute(value: Float32(newVal))
+                                      case .backlight:
+                                          KeyboardBacklightManager.shared.setAbsolute(value: Float32(newVal))
                                       default:
                                           break
                                       }
@@ -418,13 +431,17 @@ struct ContentView: View {
                       }
                   }
               }
-              .conditionalModifier((coordinator.sneakPeek.show && (coordinator.sneakPeek.type == .music) && vm.notchState == .closed && !vm.hideOnClosed && Defaults[.sneakPeekStyles] == .standard) || (coordinator.sneakPeek.show && (coordinator.sneakPeek.type != .music) && (vm.notchState == .closed))) { view in
+              .conditionalModifier((coordinator.sneakPeek.show && (coordinator.sneakPeek.type == .music) && vm.notchState == .closed && !vm.hideOnClosed && Defaults[.sneakPeekStyles] == .standard) || (coordinator.sneakPeek.show && !expandedHUDRequested && (coordinator.sneakPeek.type != .music) && (vm.notchState == .closed))) { view in
                   view
                       .fixedSize()
               }
               .zIndex(2)
             if vm.notchState == .open {
                 VStack(alignment: .leading, spacing: 0) {
+                    if systemHUDOpened {
+                        SystemHUDCard(type: presentedHUDType, value: presentedHUDValue)
+                            .frame(height: max(0, openNotchSize.height - max(24, vm.effectiveClosedNotchHeight) - 20))
+                    } else {
                     switch coordinator.currentView {
                     case .home:
                         NotchHomeView(albumArtNamespace: albumArtNamespace)
@@ -434,6 +451,7 @@ struct ContentView: View {
                         CodexView()
                             // Match the native content area without changing the other pages' layout.
                             .frame(height: max(0, openNotchSize.height - max(24, vm.effectiveClosedNotchHeight) - 20), alignment: .top)
+                    }
                     }
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -596,6 +614,7 @@ struct ContentView: View {
     }
 
     private func closeAfterHover() {
+        guard !(systemHUDOpened && coordinator.sneakPeek.show && isSystemHUD) else { return }
         guard !vm.isMouseHovering(), !ShelfSelectionModel.shared.isDragging,
               !vm.anyDropZoneTargeting, !vm.isBatteryPopoverActive,
               !SharingStateManager.shared.preventNotchClose else { return }
@@ -618,6 +637,7 @@ struct ContentView: View {
             let duration: Double = codexMonitor.reminderNeedsAttention ? 12 : codexMonitor.completionReminderSeconds
             codexReminderUntil = Date().addingTimeInterval(duration)
             codexMonitor.beginReminderPresentation()
+            systemHUDOpened = false
             doOpen(preferredView: .codex)
             NotchHapticFeedback.perform(enabled: Defaults[.enableHaptics])
             try? await Task.sleep(for: .seconds(duration))
@@ -625,6 +645,29 @@ struct ContentView: View {
             codexReminderUntil = .distantPast
             if !vm.isMouseHovering() && !ShelfSelectionModel.shared.isDragging && coordinator.currentView == .codex && !vm.anyDropZoneTargeting && (NSApp.keyWindow as? CodexInputWindow)?.codexInputEnabled != true {
                 vm.close()
+            }
+        }
+    }
+
+    private func handleSystemHUD(_ state: sneakPeek) {
+        guard vm.screenUUID == coordinator.selectedScreenUUID else { return }
+        let active = state.show && [.volume, .brightness, .backlight].contains(state.type)
+        if active && expandSystemHUD {
+            hudCloseTask?.cancel()
+            presentedHUDType = state.type; presentedHUDValue = state.value
+            if vm.notchState == .closed && !ShelfSelectionModel.shared.isDragging && !vm.anyDropZoneTargeting {
+                systemHUDOpened = true
+                doOpen(preferredView: coordinator.currentView)
+            }
+        } else if systemHUDOpened && vm.notchState == .open {
+            hudCloseTask?.cancel()
+            hudCloseTask = Task { @MainActor in
+                if !vm.isMouseHovering() && !ShelfSelectionModel.shared.isDragging && !vm.anyDropZoneTargeting {
+                    withAnimation(animationSpring) { vm.close() }
+                    try? await Task.sleep(for: .milliseconds(400))
+                    guard !Task.isCancelled else { return }
+                }
+                systemHUDOpened = false
             }
         }
     }

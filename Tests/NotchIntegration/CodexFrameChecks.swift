@@ -5,6 +5,10 @@ import Darwin
 /// must remain on the same initialized connection. No real user data is used.
 @main struct CodexFrameChecks {
     static func main() throws {
+        precondition(CodexIPCTransport.supportsStreamVersion(11))
+        precondition(CodexIPCTransport.supportsStreamVersion(13))
+        precondition(!CodexIPCTransport.supportsStreamVersion(12))
+        precondition(!CodexIPCTransport.supportsStreamVersion(14))
         precondition(!CodexIPCTransport.supportsFrameLength(0))
         precondition(CodexIPCTransport.supportsFrameLength(64 * 1024 * 1024 + 1))
         precondition(CodexIPCTransport.supportsFrameLength(256 * 1024 * 1024))
@@ -43,12 +47,13 @@ import Darwin
             }
             send(["type": "response", "method": "initialize", "result": ["clientId": "frame-test"]])
             send(["type": "broadcast", "method": "thread-stream-state-changed", "version": 11, "sourceClientId": "owner", "params": ["conversationId": "test", "change": ["type": "snapshot", "revision": 1, "conversationState": ["title": "Synthetic large frame", "diagnosticPadding": String(repeating: "x", count: 64 * 1024 * 1024 + 1024), "threadRuntimeStatus": ["type": "idle"]]]]])
-            send(["type": "broadcast", "method": "thread-stream-state-changed", "version": 11, "sourceClientId": "owner", "params": ["conversationId": "test", "change": ["type": "snapshot", "revision": 2, "conversationState": ["title": "Small follow-up", "threadRuntimeStatus": ["type": "idle"]]]]])
+            send(["type": "broadcast", "method": "thread-stream-state-changed", "version": 13, "sourceClientId": "owner", "params": ["conversationId": "test", "change": ["type": "patches", "baseRevision": 1, "revision": 2, "patches": [["op": "replace", "path": ["title"], "value": "Version 13 follow-up"]], "acceptedTextChanges": []]]])
             _ = finish.wait(timeout: .now() + 20)
         }
         let transport = CodexIPCTransport(home: home, socketConnector: { Darwin.dup(client) }) { event in
             switch event {
-            case .session: received.signal()
+            case .session(let session, let baseline):
+                if !baseline { precondition(session.title == "Version 13 follow-up") }; received.signal()
             case .connection(false, _): preconditionFailure("supported large frame must not disconnect")
             default: break
             }

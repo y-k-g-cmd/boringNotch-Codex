@@ -33,6 +33,13 @@ final class VolumeManager: NSObject, ObservableObject {
 
     var shouldShowOverlay: Bool { Date().timeIntervalSince(lastChangeAt) < visibleDuration }
 
+    // Synchronous CoreAudio snapshot for manual-key HUDs; avoids a stale
+    // published value on the first frame after the system changes volume.
+    func levelForHUD() -> Float? {
+        guard let level = readVolumeInternal() else { return nil }
+        return isMutedInternal() ? 0 : level
+    }
+
     // MARK: - Public Control API
     @MainActor func increase(stepDivisor: Float = 1.0) {
         let divisor = max(stepDivisor, 0.25)

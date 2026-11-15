@@ -129,7 +129,7 @@ class BoringViewCoordinator: ObservableObject {
         ) { [weak self] _ in
             Task { @MainActor in
                 guard let self = self else { return }
-                let granted = await XPCHelperClient.shared.isAccessibilityAuthorized()
+                let granted = MediaKeyInterceptor.shared.isAccessibilityAuthorized()
                 if !granted {
                     // If permission was revoked, disable HUD replacement
                     Defaults[.hudReplacement] = false
@@ -154,7 +154,7 @@ class BoringViewCoordinator: ObservableObject {
                     if change.newValue {
                         self.hudEnableTask = Task { @MainActor in
                             // Check prior authorization so we only restart if permissions were newly granted
-                            let priorAuthorized = await XPCHelperClient.shared.isAccessibilityAuthorized()
+                            let priorAuthorized = MediaKeyInterceptor.shared.isAccessibilityAuthorized()
 
                             MediaKeyInterceptor.shared.start(requireAccessibility: true, promptIfNeeded: true)
 
@@ -183,7 +183,7 @@ class BoringViewCoordinator: ObservableObject {
         // On startup, ensure the hudReplacement state reflects current authorization
         Task { @MainActor in
             if Defaults[.hudReplacement] {
-                let authorized = await XPCHelperClient.shared.isAccessibilityAuthorized()
+                let authorized = MediaKeyInterceptor.shared.isAccessibilityAuthorized()
                 if !authorized {
                     Defaults[.hudReplacement] = false
                 } else {
@@ -227,12 +227,14 @@ class BoringViewCoordinator: ObservableObject {
         status: Bool, type: SneakContentType, duration: TimeInterval = 1.5, value: CGFloat = 0,
         icon: String = ""
     ) {
-        sneakPeekDuration = duration
+        let system = [.volume, .brightness, .backlight].contains(type)
+        let configured = UserDefaults.standard.object(forKey: "systemHUDDuration") as? Double ?? 1.5
+        sneakPeekDuration = system && configured.isFinite ? min(5, max(0.5, configured)) : duration
         if type != .music {
             // close()
-            if !Defaults[.hudReplacement] {
-                return
-            }
+            if system {
+                guard SystemHUDMonitor.enabled(type) else { return }
+            } else if !Defaults[.hudReplacement] { return }
         }
         Task { @MainActor in
             withAnimation(.smooth) {
@@ -314,5 +316,101 @@ class BoringViewCoordinator: ObservableObject {
     
     func showEmpty() {
         currentView = .home
+    }
+}
+
+
+/// Only explicit media keys or a pointer interaction in Control Center can
+/// present an indicator. Ambient/automatic level changes never present a HUD.
+@MainActor final class SystemHUDMonitor {
+    static let shared = SystemHUDMonitor()
+    private var timer: Timer?
+    private var busy = false
+    private var previous: [SneakContentType: Double] = [:]
+    private var eventMonitors: [Any] = []
+    private var keyType: SneakContentType?
+    private var keyUntil = 0.0
+    private var keySequence = 0
+    private var sampledSequence = 0
+    private var wasInControlCenter = false
+    private var lastPointer: NSPoint?
+    nonisolated static func enabled(_ type: SneakContentType) -> Bool {
+        let defaults = UserDefaults.standard
+        guard defaults.object(forKey: "systemHUDEnabled") as? Bool ?? true else { return false }
+        let key: String
+        switch type { case .volume: key = "systemHUDVolume"; case .brightness: key = "systemHUDBrightness"; case .backlight: key = "systemHUDBacklight"; default: return false }
+        return defaults.object(forKey: key) as? Bool ?? true
+    }
+    func start() {
+        guard timer == nil else { return }
+        if let token = NSEvent.addGlobalMonitorForEvents(matching: .systemDefined, handler: { [weak self] event in
+            MainActor.assumeIsolated { self?.mediaKey(event) }
+        }) { eventMonitors.append(token) }
+        if let token = NSEvent.addLocalMonitorForEvents(matching: .systemDefined, handler: { [weak self] event in
+            MainActor.assumeIsolated { self?.mediaKey(event) }; return event
+        }) { eventMonitors.append(token) }
+        let timer = Timer(timeInterval: 0.1, repeats: true) { [weak self] _ in Task { @MainActor in await self?.poll() } }
+        timer.tolerance = 0.015; RunLoop.main.add(timer, forMode: .common); self.timer = timer
+    }
+    private func mediaKey(_ event: NSEvent) {
+        guard event.subtype.rawValue == 8, (event.data1 >> 8) & 0xff == 0xA else { return }
+        let type: SneakContentType
+        switch (event.data1 >> 16) & 0xffff {
+        case 0, 1, 7: type = .volume
+        case 2, 3: type = event.modifierFlags.contains(.command) ? .backlight : .brightness
+        case 21, 22: type = .backlight
+        default: return
+        }
+        guard Self.enabled(type) else { return }
+        keyType = type; keyUntil = ProcessInfo.processInfo.systemUptime + 0.35; keySequence += 1
+        Task { @MainActor in
+            try? await Task.sleep(for: .milliseconds(20))
+            await poll()
+        }
+    }
+    private func pointerInControlCenter() -> Bool {
+        guard let point = CGEvent(source: nil)?.location,
+              let windows = CGWindowListCopyWindowInfo([.optionOnScreenOnly, .excludeDesktopElements], kCGNullWindowID) as? [[String: Any]] else { return false }
+        for window in windows {
+            guard let bounds = window[kCGWindowBounds as String] as? [String: Any],
+                  let rect = CGRect(dictionaryRepresentation: bounds as CFDictionary), rect.contains(point),
+                  let pid = window[kCGWindowOwnerPID as String] as? pid_t else { continue }
+            let owner = NSRunningApplication(processIdentifier: pid)?.bundleIdentifier
+            if owner == "com.apple.controlcenter" || owner == "com.apple.systemuiserver" { return true }
+            // The first real window under the pointer obscures lower windows.
+            if (window[kCGWindowLayer as String] as? Int ?? 0) == 0 { return false }
+        }
+        return false
+    }
+    private func poll() async {
+        guard !busy else { return }; busy = true; defer { busy = false }
+        let manualKey = ProcessInfo.processInfo.systemUptime < keyUntil
+        let sequence = keySequence
+        let pointer = NSEvent.mouseLocation
+        let moved = lastPointer != pointer; lastPointer = pointer
+        guard manualKey || moved || wasInControlCenter || CGEventSource.buttonState(.combinedSessionState, button: .left) else { return }
+        let controlCenter = pointerInControlCenter()
+        let manualDrag = controlCenter && wasInControlCenter && CGEventSource.buttonState(.combinedSessionState, button: .left)
+        wasInControlCenter = controlCenter
+        guard manualKey || controlCenter else { return }
+        let kinds: [SneakContentType] = manualKey ? [keyType ?? .volume] : [.volume, .brightness, .backlight]
+        for type in kinds where Self.enabled(type) {
+            let value: Double?
+            switch type {
+            case .volume:
+                value = VolumeManager.shared.levelForHUD().map(Double.init)
+            case .brightness: value = await XPCHelperClient.shared.currentScreenBrightness().map(Double.init)
+            case .backlight: value = await XPCHelperClient.shared.currentKeyboardBrightness().map(Double.init)
+            default: value = nil
+            }
+            guard let value, value.isFinite else { continue }
+            let level = min(1, max(0, value))
+            let old = previous.updateValue(level, forKey: type)
+            let changed = old.map { abs($0 - level) >= 0.002 } ?? false
+            if (manualKey && (sequence != sampledSequence || changed)) || (manualDrag && changed) {
+                BoringViewCoordinator.shared.toggleSneakPeek(status: true, type: type, value: CGFloat(level))
+            }
+        }
+        if manualKey { sampledSequence = sequence }
     }
 }

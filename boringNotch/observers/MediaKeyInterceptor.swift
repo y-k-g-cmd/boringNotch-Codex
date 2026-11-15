@@ -52,8 +52,12 @@ final class MediaKeyInterceptor {
             options: .defaultTap,
             eventsOfInterest: CGEventMask(mask),
             callback: { _, type, cgEvent, userInfo in
-                guard let userInfo else { return Unmanaged.passRetained(cgEvent) }
+                guard let userInfo else { return Unmanaged.passUnretained(cgEvent) }
                 let interceptor = Unmanaged<MediaKeyInterceptor>.fromOpaque(userInfo).takeUnretainedValue()
+                if type == .tapDisabledByTimeout || type == .tapDisabledByUserInput {
+                    if let tap = interceptor.eventTap { CGEvent.tapEnable(tap: tap, enable: true) }
+                    return Unmanaged.passUnretained(cgEvent)
+                }
                 return interceptor.handleSystemDefined(event: cgEvent)
             },
             userInfo: UnsafeMutableRawPointer(Unmanaged.passUnretained(self).toOpaque())
@@ -73,17 +77,19 @@ final class MediaKeyInterceptor {
     }
 
       func requestAccessibilityAuthorization() {
-          XPCHelperClient.shared.requestAccessibilityAuthorization()
+          let options = [kAXTrustedCheckOptionPrompt.takeUnretainedValue() as String: true] as CFDictionary
+          _ = AXIsProcessTrustedWithOptions(options)
     }
 
     func ensureAccessibilityAuthorization(promptIfNeeded: Bool = false) async -> Bool {
-        await XPCHelperClient.shared.ensureAccessibilityAuthorization(promptIfNeeded: promptIfNeeded)
+        if promptIfNeeded && !isAccessibilityAuthorized() { requestAccessibilityAuthorization() }
+        return isAccessibilityAuthorized()
     }
 
 
     private func handleSystemDefined(event cgEvent: CGEvent) -> Unmanaged<CGEvent>? {
         guard let nsEvent = NSEvent(cgEvent: cgEvent), nsEvent.type == .systemDefined, nsEvent.subtype.rawValue == 8 else {
-            return Unmanaged.passRetained(cgEvent)
+            return Unmanaged.passUnretained(cgEvent)
         }
         let data1 = nsEvent.data1
         let keyCode = (data1 & 0xFFFF_0000) >> 16
@@ -93,15 +99,18 @@ final class MediaKeyInterceptor {
         // Only handle the key-down event to avoid duplicate handling.
         let isKeyDown = (stateByte == 0xA)
 
-        guard isKeyDown else { return Unmanaged.passRetained(cgEvent) }
+        guard isKeyDown else { return Unmanaged.passUnretained(cgEvent) }
         guard let nx = NXKeyType(rawValue: keyCode) else {
-                return Unmanaged.passRetained(cgEvent)
+                return Unmanaged.passUnretained(cgEvent)
             }
         // Inspect modifier flags to support option/shift/command behaviors
         let flags = nsEvent.modifierFlags
         let optionDown = flags.contains(.option)
         let shiftDown = flags.contains(.shift)
         let commandDown = flags.contains(.command)
+        let category: SneakContentType = (nx == .soundUp || nx == .soundDown || nx == .mute)
+            ? .volume : commandDown ? .backlight : .brightness
+        guard SystemHUDMonitor.enabled(category) else { return Unmanaged.passUnretained(cgEvent) }
 
         // Read configured action for Option alone presses
         let optionAction = Defaults[.optionKeyAction]

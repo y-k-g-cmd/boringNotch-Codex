@@ -494,8 +494,31 @@ struct HUD: View {
     @Default(.optionKeyAction) var optionKeyAction
     @ObservedObject var coordinator = BoringViewCoordinator.shared
     @State private var accessibilityAuthorized = false
+    @AppStorage("systemHUDExpand") private var expandSystemHUD = true
+    @AppStorage("systemHUDEnabled") private var systemHUD = true
+    @AppStorage("systemHUDVolume") private var hudVolume = true
+    @AppStorage("systemHUDBrightness") private var hudBrightness = true
+    @AppStorage("systemHUDBacklight") private var hudBacklight = true
+    @AppStorage("systemHUDDuration") private var hudDuration = 1.5
     var body: some View {
         Form {
+            Section("刘海系统提示") {
+                Toggle("显示系统调整提示", isOn: $systemHUD)
+                Toggle("使用完整卡片展开动画", isOn: $expandSystemHUD)
+                Toggle("音量与静音", isOn: $hudVolume).disabled(!systemHUD)
+                Toggle("屏幕亮度", isOn: $hudBrightness).disabled(!systemHUD)
+                Toggle("键盘背光", isOn: $hudBacklight).disabled(!systemHUD)
+                Stepper(value: $hudDuration, in: 0.5...5, step: 0.5) { Text("提示停留：\(hudDuration, specifier: "%.1f") 秒") }
+                Text("仅在手动按媒体键或拖动控制中心滑块时显示，自动亮度变化不提示。")
+                    .font(.caption).foregroundStyle(.secondary)
+                HStack {
+                    Button("预览音量") { coordinator.toggleSneakPeek(status: true, type: .volume, value: 0.5) }.disabled(!systemHUD || !hudVolume)
+                    Button("预览亮度") { coordinator.toggleSneakPeek(status: true, type: .brightness, value: 0.7) }.disabled(!systemHUD || !hudBrightness)
+                    Button("预览背光") { coordinator.toggleSneakPeek(status: true, type: .backlight, value: 0.4) }.disabled(!systemHUD || !hudBacklight)
+                }
+                Text("预览只展示提示，不改变实际音量或亮度。")
+                    .font(.caption).foregroundStyle(.secondary)
+            }
             Section {
                 Defaults.Toggle(key: .hudReplacement) {
                    Text("Replace system HUD")
@@ -504,7 +527,7 @@ struct HUD: View {
                 .help("Enable Accessibility in System Settings → Privacy & Security → Accessibility")
                 .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
                     Task { @MainActor in
-                        let helper = await XPCHelperClient.shared.isAccessibilityAuthorized()
+                        let helper = MediaKeyInterceptor.shared.isAccessibilityAuthorized()
                             accessibilityAuthorized = helper
                         }
                     }
@@ -518,7 +541,7 @@ struct HUD: View {
                         HStack(spacing: 12) {
                             Button("Request Accessibility") {
                                 // Use unsandboxed XPC helper if available so the system prompt is shown
-                                XPCHelperClient.shared.requestAccessibilityAuthorization()
+                                MediaKeyInterceptor.shared.requestAccessibilityAuthorization()
                             }
                             .buttonStyle(.borderedProminent)
                         }
@@ -570,7 +593,7 @@ struct HUD: View {
         .accentColor(.effectiveAccent)
         .settingsNavigationTitle("HUDs")
         .task {
-            accessibilityAuthorized = await XPCHelperClient.shared.isAccessibilityAuthorized()
+            accessibilityAuthorized = MediaKeyInterceptor.shared.isAccessibilityAuthorized()
         }
         .onReceive(NotificationCenter.default.publisher(for: .accessibilityAuthorizationChanged)) { notification in
             if let granted = notification.userInfo?["granted"] as? Bool {
@@ -910,11 +933,51 @@ struct About: View {
 }
 
 struct CodexSettings: View {
+    @AppStorage("notchRunnerEnabled") private var runnerEnabled = true
+    @AppStorage("notchUsageEnabled") private var usageEnabled = true
+    @ObservedObject private var resources = NotchResources.shared
+    @AppStorage("notchResourceMenu") private var resourceMenu = true
+    @AppStorage("notchResourceCard") private var resourceCard = true
+    @AppStorage("notchRunnerFlipped") private var runnerFlipped = false
+    @AppStorage("notchRunnerCPU") private var runnerCPU = true
+    @AppStorage("notchRunnerSpeed") private var runnerSpeed = 1.0
+    @AppStorage("notchRunnerSize") private var runnerSize = 26.0
+    @AppStorage("notchRunnerFPS") private var runnerFPS = 24.0
+    @AppStorage("notchUsageUsed") private var usageUsed = false
+    @AppStorage("notchUsageInterval") private var usageInterval = 300.0
     @ObservedObject private var monitor = CodexMonitor.shared
     @AppStorage("codexCompletionReminderDuration") private var completionReminderDuration: Double = 6
     private var completionSeconds: Double { CodexReminderTiming.completionDuration(completionReminderDuration) }
     var body: some View {
         Form {
+            Section("系统与用量") {
+                Toggle("显示在菜单栏", isOn: $resourceMenu)
+                Toggle("在 Codex 卡片页显示摘要", isOn: $resourceCard)
+                Toggle("菜单栏跑猫与 CPU 状态", isOn: $runnerEnabled)
+                if runnerEnabled {
+                    Toggle("显示 CPU 百分比", isOn: $runnerCPU)
+                    Toggle("向左跑", isOn: $runnerFlipped)
+                    LabeledContent("跑猫大小") { Slider(value: $runnerSize, in: 20...32, step: 2).frame(width: 150) }
+                    LabeledContent("跑猫速度") { Slider(value: $runnerSpeed, in: 0.4...2.5, step: 0.1).frame(width: 150); Text(String(format: "%.1f×", runnerSpeed)).monospacedDigit() }
+                    Picker("帧率上限", selection: $runnerFPS) {
+                        Text("12 fps").tag(12.0); Text("24 fps").tag(24.0); Text("30 fps").tag(30.0)
+                    }
+                }
+                Toggle("显示 Codex 剩余额度", isOn: $usageEnabled)
+                if usageEnabled {
+                    Picker("额度显示方式", selection: $usageUsed) { Text("剩余").tag(false); Text("已用").tag(true) }
+                    Stepper(value: $usageInterval, in: 60...900, step: 60) { Text("刷新间隔：\(Int(usageInterval / 60)) 分钟") }
+                    LabeledContent("额度") { Text(resources.quotaSummary) }
+                    Button("刷新用量") { resources.refreshUsage() }.disabled(resources.loading)
+                    if resources.usageError != nil { Text("用量读取失败，请确认 Codex 已登录后重试").foregroundStyle(.orange).font(.caption) }
+                }
+                Text("内置于 boringNotch；跑猫速度随 CPU 负载变化，无需启动另外两个应用。")
+                    .font(.caption).foregroundStyle(.secondary)
+                Link("RunCat Neo · Apache-2.0", destination: URL(string: "https://github.com/runcat-dev/RunCatNeo")!)
+                    .font(.caption)
+                Text("通过本机 Codex CLI 查询额度；遵循系统减少动态效果设置。")
+                    .font(.caption).foregroundStyle(.secondary)
+            }
             Section("提醒") {
                 Toggle("任务完成或需要操作时自动下滑提醒", isOn: $monitor.remindersEnabled)
                 Stepper(value: Binding(get: { completionSeconds }, set: { completionReminderDuration = $0 }), in: 1...60, step: 1) {

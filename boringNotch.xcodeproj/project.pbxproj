@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		C0DE00000000000000000026 /* RunCatNeo-LICENSE.txt in Resources */ = {isa = PBXBuildFile; fileRef = C0DE00000000000000000027; };
+		C0DE00000000000000000024 /* NotchResources.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE00000000000000000025; };
 		B7C016A12F00000100000002 /* NotchHapticFeedback.swift in Sources */ = {isa = PBXBuildFile; fileRef = B7C016A12F00000100000001 /* NotchHapticFeedback.swift */; };
 		C0DE00000000000000000001 /* CodexSocketBridge.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE00000000000000000002 /* CodexSocketBridge.swift */; };
 		1100290C2E847E2800035A57 /* NSItemProvider+LoadHelpers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1100290B2E847E2800035A57 /* NSItemProvider+LoadHelpers.swift */; };
@@ -189,6 +191,8 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		C0DE00000000000000000027 /* RunCatNeo-LICENSE.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = boringNotch/RunCatNeo-LICENSE.txt; sourceTree = SOURCE_ROOT; };
+		C0DE00000000000000000025 /* NotchResources.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = boringNotch/components/Codex/NotchResources.swift; sourceTree = SOURCE_ROOT; };
 		B7C016A12F00000100000001 /* NotchHapticFeedback.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotchHapticFeedback.swift; sourceTree = "<group>"; };
 		C0DE00000000000000000002 /* CodexSocketBridge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = boringNotch/components/Codex/CodexSocketBridge.swift; sourceTree = SOURCE_ROOT; };
 		1100290B2E847E2800035A57 /* NSItemProvider+LoadHelpers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "NSItemProvider+LoadHelpers.swift"; sourceTree = "<group>"; };
@@ -582,6 +586,8 @@
 				60EF569E1E9A48DA87078998 /* ShelfInternalTransfer.swift */,
 				71A8B51D53DA380B19BB9BE3 /* CodexState.swift */,
 				66AE0EDD8E1BB54A6F883A97 /* CodexIPCTransport.swift */,
+				C0DE00000000000000000027 /* RunCatNeo-LICENSE.txt */,
+				C0DE00000000000000000025 /* NotchResources.swift */,
 				C0DE00000000000000000002 /* CodexSocketBridge.swift */,
 				40B80764F9963F6BEF61BB5E /* CodexMonitor.swift */,
 				1D9CB6B074A329FEB47F06EB /* CodexView.swift */,
@@ -914,6 +920,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				C0DE00000000000000000026 /* RunCatNeo-LICENSE.txt in Resources */,
 				14CEF41D2C5CAED400855D72 /* Preview Assets.xcassets in Resources */,
 				14CEF41A2C5CAED400855D72 /* Assets.xcassets in Resources */,
 				112B0EB82E30DD0F00562D6C /* MediaRemoteAdapterTestClient in Resources */,
@@ -941,6 +948,7 @@
 				D4917B969BA7458482C3415E /* ShelfInternalTransfer.swift in Sources */,
 				D59DDCCEB378697CD5AF0DA0 /* CodexState.swift in Sources */,
 				F8DD4C4EEC582081470FA469 /* CodexIPCTransport.swift in Sources */,
+				C0DE00000000000000000024 /* NotchResources.swift in Sources */,
 				C0DE00000000000000000001 /* CodexSocketBridge.swift in Sources */,
 				11CF7E97335A6AA4890E4A9A /* CodexMonitor.swift in Sources */,
 				7B1DF4707ABBC60334102EF5 /* CodexView.swift in Sources */,
@@ -1261,7 +1269,7 @@
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "-";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 271.23;
+				CURRENT_PROJECT_VERSION = 271.26;
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_ASSET_PATHS = "\"boringNotch/Preview Content\"";
 				DEVELOPMENT_TEAM = "";
@@ -1315,7 +1323,7 @@
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "-";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 271.23;
+				CURRENT_PROJECT_VERSION = 271.26;
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_ASSET_PATHS = "\"boringNotch/Preview Content\"";
 				DEVELOPMENT_TEAM = "";

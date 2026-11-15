@@ -436,11 +436,11 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         }
         if Defaults[.hudReplacement] {
             Task { @MainActor in
-               let authorized = await XPCHelperClient.shared.isAccessibilityAuthorized()
+               let authorized = MediaKeyInterceptor.shared.isAccessibilityAuthorized()
                 if authorized {
                     MediaKeyInterceptor.shared.start(requireAccessibility: true, promptIfNeeded: false)
                 } else {
-                    let granted = await XPCHelperClient.shared.ensureAccessibilityAuthorization(promptIfNeeded: false)
+                    let granted = await MediaKeyInterceptor.shared.ensureAccessibilityAuthorization(promptIfNeeded: false)
                     if granted {
                         MediaKeyInterceptor.shared.start(requireAccessibility: true, promptIfNeeded: false)
                     }

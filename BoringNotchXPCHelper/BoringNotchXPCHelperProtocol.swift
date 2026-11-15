@@ -9,6 +9,8 @@ import Foundation
 
 /// The protocol that this service will vend as its API. This protocol will also need to be visible to the process hosting the service.
 @objc protocol BoringNotchXPCHelperProtocol {
+    // Fixed read-only CLI operation; returns only quota windows, never account credentials.
+    func readCodexUsage(with reply: @escaping (Data?, String?) -> Void)
     // Connect only to the current user's fixed Codex status socket.
     func openCodexStatusSocket(with reply: @escaping (FileHandle?, Int32) -> Void)
     func isAccessibilityAuthorized(with reply: @escaping (Bool) -> Void)

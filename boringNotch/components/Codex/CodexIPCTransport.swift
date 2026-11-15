@@ -1,7 +1,7 @@
 import Foundation
 import Darwin
 
-/// Adapter for the installed Codex Desktop IPC protocol (stream version 11).
+/// Adapter for the installed Codex Desktop IPC protocol (verified stream versions 11 and 13).
 /// This is a private desktop interface, separate from the public app-server protocol.
 /// Replies are targeted to the live owner and validated against its exact pending request.
 final class CodexIPCTransport: @unchecked Sendable {
@@ -28,6 +28,9 @@ final class CodexIPCTransport: @unchecked Sendable {
     static func supportsFrameLength(_ length: Int) -> Bool {
         length > 0 && length <= maximumFrameBytes
     }
+    // Version 13 retains snapshot/revision/patches and the same request methods.
+    // acceptedTextChanges is transcript-renderer metadata, not a state patch.
+    static func supportsStreamVersion(_ version: Int) -> Bool { [11, 13].contains(version) }
     private var initializedAt: TimeInterval?
     private var attemptDeadline = TimeInterval.infinity
     private let home: URL
@@ -213,7 +216,7 @@ final class CodexIPCTransport: @unchecked Sendable {
             states.removeValue(forKey: key)
             deliver(.removed(key))
         } else if method == "thread-stream-state-changed" {
-            guard message["version"] as? Int == 11 else {
+            guard let version = message["version"] as? Int, Self.supportsStreamVersion(version) else {
                 deliver(.connection(false, "Codex 状态协议已变化，请更新接入适配")); return
             }
             guard let change = params["change"] as? [String: Any], let revision = change["revision"] as? Int else { return }

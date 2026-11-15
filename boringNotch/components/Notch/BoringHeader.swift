@@ -37,7 +37,14 @@ struct BoringHeader: View {
             }
 
             HStack(spacing: 4) {
-                if vm.notchState == .open {
+                if vm.notchState == .open && coordinator.sneakPeek.show && [.volume, .brightness, .backlight].contains(coordinator.sneakPeek.type) {
+                    let type = coordinator.sneakPeek.type
+                    Image(systemName: type == .volume ? (coordinator.sneakPeek.value == 0 ? "speaker.slash.fill" : "speaker.wave.2.fill") : type == .brightness ? "sun.max.fill" : "light.max")
+                        .font(.system(size: 12))
+                    ProgressView(value: min(1, max(0, coordinator.sneakPeek.value))).frame(width: 54).tint(.white)
+                    Text("\(Int(coordinator.sneakPeek.value * 100))%")
+                        .font(.system(size: 10, design: .monospaced)).monospacedDigit().frame(width: 30)
+                } else if vm.notchState == .open {
                     if Defaults[.showMirror] {
                         Button(action: {
                             vm.toggleCameraPreview()
