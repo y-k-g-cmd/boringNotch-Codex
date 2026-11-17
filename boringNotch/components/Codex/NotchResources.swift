@@ -12,6 +12,16 @@ struct NotchQuotaWindow: Decodable {
     var label: String { minutes >= 1440 ? "\(Int(minutes / 1440))d" : minutes >= 60 ? "\(Int(minutes / 60))h" : "\(Int(minutes))m" }
 }
 
+struct QuotaFailurePolicy {
+    private(set) var reported = false
+    mutating func result(success: Bool, connected: Bool, enabled: Bool) -> Bool {
+        if success { reported = false; return false }
+        guard connected, enabled, !reported else { return false }
+        reported = true
+        return true
+    }
+}
+
 struct NotchCPUSample {
     var previous: [UInt32]?
     mutating func percentage(_ ticks: [UInt32]) -> Double? {
@@ -28,13 +38,96 @@ struct NotchCPUSample {
 /// One in-process menu-bar item; no RunCat/usage app dependency.
 /// Cat artwork: RunCat Neo, Copyright 2026 Kyome22, Apache-2.0.
 /// See THIRD_PARTY_LICENSES.
-@MainActor final class NotchResources: NSObject, ObservableObject, NSMenuDelegate {
+@MainActor final class NotchResources: NSObject, ObservableObject {
     static let shared = NotchResources()
     @Published private(set) var cpu: Double?
     @Published private(set) var windows: [NotchQuotaWindow] = []
     @Published private(set) var updated: Date?
     @Published private(set) var usageError: String?
     @Published private(set) var loading = false
+    @Published private(set) var cpuHistory: [Double] = []
+    @Published private(set) var memoryUsed: Double?
+    @Published private(set) var memoryPressure: Int?
+    @Published private(set) var justUpdated = false
+    private var quotaDiagnosticActive = false
+    private var quotaDiagnosticEvents: [[String: Any]] = []
+    private var quotaDiagnosticStart = Date()
+    private var quotaDiagnosticObservation: AnyCancellable?
+    func recordQuotaDiagnostic(_ event: String) {
+        guard quotaDiagnosticActive else { return }
+        quotaDiagnosticEvents.append(["event": event, "elapsed": Date().timeIntervalSince(quotaDiagnosticStart), "connected": CodexMonitor.shared.connected])
+        let directory = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
+        try? FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        let report: [String: Any] = ["test": "quota-warning-once", "events": quotaDiagnosticEvents]
+        if let data = try? JSONSerialization.data(withJSONObject: report, options: [.prettyPrinted, .sortedKeys]) {
+            try? data.write(to: directory.appendingPathComponent("NotchQuotaWarningTest.json"), options: .atomic)
+        }
+    }
+    private func runQuotaDiagnosticIfRequested() {
+        guard ProcessInfo.processInfo.arguments.contains("--test-quota-warning-once") else { return }
+        Task { @MainActor in
+            // Wait for the normal connection and real in-flight quota read to finish.
+            let deadline = Date().addingTimeInterval(90)
+            while (!CodexMonitor.shared.connected || loading) && Date() < deadline {
+                try? await Task.sleep(for: .milliseconds(250))
+            }
+            quotaDiagnosticStart = Date(); quotaDiagnosticActive = true
+            guard CodexMonitor.shared.connected, !loading, usageEnabled, warningEnabled else {
+                recordQuotaDiagnostic("blocked_not_connected_or_disabled"); quotaDiagnosticActive = false; return
+            }
+            let previousError = usageError
+            let previousPolicy = failurePolicy
+            let previousUpdatedFeedback = justUpdated
+            failurePolicy = QuotaFailurePolicy()
+            quotaDiagnosticObservation = CodexMonitor.shared.$connected.sink { [weak self] _ in
+                self?.recordQuotaDiagnostic("connection_observed")
+            }
+            recordQuotaDiagnostic("started")
+            defer {
+                usageError = previousError; failurePolicy = previousPolicy; justUpdated = previousUpdatedFeedback
+                recordQuotaDiagnostic("restored")
+                quotaDiagnosticObservation = nil; quotaDiagnosticActive = false
+            }
+            @MainActor func fail(_ number: Int) {
+                guard CodexMonitor.shared.connected else { recordQuotaDiagnostic("aborted_connection_changed"); return }
+                let token = UUID(); requestToken = token
+                recordQuotaDiagnostic("injected_failure_\(number)")
+                finish(token: token, data: nil, error: "模拟额度读取失败（一次性诊断）")
+            }
+            fail(1)
+            let showDeadline = Date().addingTimeInterval(30)
+            while !quotaDiagnosticEvents.contains(where: { $0["event"] as? String == "presented" }) && Date() < showDeadline {
+                try? await Task.sleep(for: .milliseconds(100))
+            }
+            guard quotaDiagnosticEvents.contains(where: { $0["event"] as? String == "presented" }) else { recordQuotaDiagnostic("failed_no_presentation"); return }
+            try? await Task.sleep(for: .seconds(1))
+            fail(2)
+            let closeDeadline = Date().addingTimeInterval(warningSeconds + 20)
+            while !quotaDiagnosticEvents.contains(where: { $0["event"] as? String == "closed" }) && Date() < closeDeadline {
+                try? await Task.sleep(for: .milliseconds(100))
+            }
+            guard quotaDiagnosticEvents.contains(where: { $0["event"] as? String == "closed" }) else { recordQuotaDiagnostic("incomplete_hover_or_interaction_held_open"); return }
+            try? await Task.sleep(for: .seconds(1))
+            fail(3)
+            try? await Task.sleep(for: .seconds(3))
+            recordQuotaDiagnostic("finished")
+        }
+    }
+
+    private var failurePolicy = QuotaFailurePolicy()
+    private let popover = NSPopover()
+    private var pressureSource: DispatchSourceMemoryPressure?
+    static let quotaWarning = Notification.Name("NotchQuotaReadFailure")
+    var warningEnabled: Bool { UserDefaults.standard.object(forKey: "notchQuotaWarnings") as? Bool ?? true }
+    var warningSeconds: Double { bounded("notchQuotaWarningSeconds", fallback: 6, range: 3...30) }
+    var pressureLabel: String {
+        switch memoryPressure {
+        case 1: return text("内存压力：正常", "Pressure: normal")
+        case 2: return text("内存压力：偏高", "Pressure: elevated")
+        case 4: return text("内存压力：高", "Pressure: high")
+        default: return text("内存压力：待采样", "Pressure: pending")
+        }
+    }
     private var item: NSStatusItem?
     private var timer: Timer?
     private var sample = NotchCPUSample()
@@ -65,18 +158,25 @@ struct NotchCPUSample {
     }
     func start() {
         guard !started else { return }; started = true
+        let source = DispatchSource.makeMemoryPressureSource(eventMask: [.normal, .warning, .critical], queue: .main)
+        source.setEventHandler { [weak self, weak source] in
+            guard let source else { return }
+            Task { @MainActor in self?.memoryPressure = source.data.contains(.critical) ? 4 : source.data.contains(.warning) ? 2 : 1 }
+        }
+        pressureSource = source; source.resume()
         let center = NSWorkspace.shared.notificationCenter
         observers.append(center.addObserver(forName: NSWorkspace.willSleepNotification, object: nil, queue: .main) { [weak self] _ in
             Task { @MainActor in self?.awake = false }
         })
         observers.append(center.addObserver(forName: NSWorkspace.didWakeNotification, object: nil, queue: .main) { [weak self] _ in
-            Task { @MainActor in self?.awake = true; self?.sample.previous = nil; self?.lastUsage = .distantPast }
+            Task { @MainActor in self?.awake = true; self?.sample.previous = nil; self?.cpuHistory = []; self?.lastUsage = .distantPast }
         })
         let timer = Timer(timeInterval: 0.25, repeats: true) { [weak self] _ in
             Task { @MainActor in self?.tick() }
         }
         timer.tolerance = 0.04; RunLoop.main.add(timer, forMode: .common); self.timer = timer
         tick()
+        runQuotaDiagnosticIfRequested()
     }
     private func tick() {
         guard awake else { return }
@@ -90,7 +190,8 @@ struct NotchCPUSample {
         if menuEnabled && item == nil {
             let status = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
             status.button?.font = .monospacedDigitSystemFont(ofSize: 11, weight: .medium)
-            let menu = NSMenu(); menu.delegate = self; status.menu = menu; item = status
+            status.button?.target = self; status.button?.action = #selector(togglePanel)
+            item = status
         }
         if runnerEnabled && Date().timeIntervalSince(lastCPU) >= 2 {
             lastCPU = Date()
@@ -102,6 +203,8 @@ struct NotchCPUSample {
             mach_port_deallocate(mach_task_self_, host)
             if result == KERN_SUCCESS { cpu = sample.percentage([info.cpu_ticks.0, info.cpu_ticks.1, info.cpu_ticks.2, info.cpu_ticks.3]) }
             else { cpu = nil }
+            if let cpu { cpuHistory.append(cpu); if cpuHistory.count > 30 { cpuHistory.removeFirst(cpuHistory.count - 30) } }
+            sampleMemory()
         }
         if usageEnabled && !loading && Date().timeIntervalSince(lastUsage) >= usageInterval { refreshUsage() }
         guard !menuVisible, menuEnabled else { return }
@@ -130,8 +233,8 @@ struct NotchCPUSample {
         item?.button?.setAccessibilityLabel(item?.button?.toolTip)
     }
     func refreshUsage() {
-        guard usageEnabled, !loading else { return }
-        loading = true; lastUsage = Date()
+        guard usageEnabled, !loading, !quotaDiagnosticActive else { return }
+        loading = true; justUpdated = false; lastUsage = Date()
         let token = UUID(); requestToken = token
         let connection = NSXPCConnection(serviceName: "\(Bundle.main.bundleIdentifier ?? "io.github.y-k-g-cmd.boringnotchcodex").BoringNotchXPCHelper")
         self.connection = connection
@@ -152,31 +255,53 @@ struct NotchCPUSample {
         guard requestToken == token else { return }
         requestToken = nil; connection?.invalidate(); connection = nil; loading = false
         struct Payload: Decodable { let windows: [NotchQuotaWindow] }
-        if let data, let payload = try? JSONDecoder().decode(Payload.self, from: data), !payload.windows.isEmpty {
-            windows = payload.windows; updated = Date(); usageError = nil
-        } else { usageError = error ?? "用量暂不可用" }
-    }
-    func menuNeedsUpdate(_ menu: NSMenu) {
-        menu.removeAllItems()
-        func line(_ title: String) { let row = NSMenuItem(title: title, action: nil, keyEquivalent: ""); menu.addItem(row) }
-        line("boringNotch · " + text("系统与用量", "System & usage"))
-        if runnerEnabled { line("CPU  " + (cpu.map { "\(Int($0.rounded()))%" } ?? "--")) }
-        menu.addItem(.separator())
-        if usageEnabled {
-            for window in windows {
-                line("Codex \(window.label) · " + text("剩余", "remaining") + " \(window.remaining)%")
-                if let reset = window.resetsAt { line(text("重置：", "Resets: ") + Date(timeIntervalSince1970: reset).formatted(date: .abbreviated, time: .shortened)) }
+        if let data, let payload = try? JSONDecoder().decode(Payload.self, from: data), !payload.windows.isEmpty,
+           payload.windows.allSatisfy({ $0.usedPercent.isFinite && (0...100).contains($0.usedPercent) && $0.minutes.isFinite && $0.minutes > 0 && $0.minutes <= 52560000 && ($0.resetsAt?.isFinite ?? true) }) {
+            windows = payload.windows; updated = Date(); usageError = nil; justUpdated = true
+            _ = failurePolicy.result(success: true, connected: false, enabled: warningEnabled)
+            Task { @MainActor [weak self] in
+                try? await Task.sleep(for: .seconds(2))
+                guard self?.requestToken == nil else { return }
+                self?.justUpdated = false
             }
-            if let updated { line(text("更新：", "Updated: ") + updated.formatted(date: .omitted, time: .standard)) }
-            if usageError != nil { line(text("更新失败；已有数值为上次结果", "Refresh failed; showing last successful result")) }
-            let refresh = NSMenuItem(title: loading ? text("正在刷新…", "Refreshing…") : text("刷新用量", "Refresh usage"), action: #selector(refreshClicked), keyEquivalent: "")
-            refresh.target = self; refresh.isEnabled = !loading; menu.addItem(refresh)
+        } else {
+            justUpdated = false
+            usageError = error ?? "用量暂不可用"
+            if failurePolicy.result(success: false, connected: CodexMonitor.shared.connected, enabled: warningEnabled && usageEnabled) {
+                recordQuotaDiagnostic("notification_posted")
+                NotificationCenter.default.post(name: Self.quotaWarning, object: nil)
+            }
         }
-        line(text("设置 → Codex 可调整外观与刷新间隔", "Settings → Codex for appearance and refresh interval"))
     }
-    func menuWillOpen(_ menu: NSMenu) { menuVisible = true }
-    func menuDidClose(_ menu: NSMenu) { menuVisible = false }
-    @objc private func refreshClicked() { refreshUsage() }
+    @objc private func togglePanel() {
+        guard let button = item?.button else { return }
+        if popover.isShown { popover.performClose(nil); return }
+        popover.behavior = .transient
+        let controller = NSHostingController(rootView: ResourcePanel(resources: self))
+        controller.sizingOptions = [.preferredContentSize]
+        popover.contentViewController = controller
+        popover.contentSize = controller.view.fittingSize
+        popover.show(relativeTo: button.bounds, of: button, preferredEdge: .minY)
+    }
+    func openCodex() {
+        if let url = NSWorkspace.shared.urlForApplication(withBundleIdentifier: "com.openai.codex") { NSWorkspace.shared.open(url) }
+        else if let url = URL(string: "codex://") { NSWorkspace.shared.open(url) }
+    }
+    func openSettings() { popover.performClose(nil); SettingsWindowController.shared.showWindow() }
+    private func sampleMemory() {
+        var info = vm_statistics64()
+        var count = mach_msg_type_number_t(MemoryLayout<vm_statistics64>.size / MemoryLayout<integer_t>.size)
+        let host = mach_host_self()
+        defer { mach_port_deallocate(mach_task_self_, host) }
+        let result = withUnsafeMutablePointer(to: &info) { pointer in
+            pointer.withMemoryRebound(to: integer_t.self, capacity: Int(count)) { host_statistics64(host, HOST_VM_INFO64, $0, &count) }
+        }
+        if result == KERN_SUCCESS {
+            memoryUsed = min(Double(ProcessInfo.processInfo.physicalMemory), Double(UInt64(info.active_count) + UInt64(info.wire_count) + UInt64(info.compressor_page_count)) * Double(vm_kernel_page_size))
+        } else { memoryUsed = nil }
+        var level: Int32 = 0; var size = MemoryLayout<Int32>.size
+        if sysctlbyname("kern.memorystatus_vm_pressure_level", &level, &size, nil, 0) == 0 && [1, 2, 4].contains(level) { memoryPressure = Int(level) }
+    }
     static func cat(frame: Int) -> NSImage {
         let image = NSImage(named: "NotchRunCatFrame\(frame % 5)")?.copy() as? NSImage
             ?? NSImage(systemSymbolName: "cat.fill", accessibilityDescription: "Cat") ?? NSImage()
@@ -249,5 +374,163 @@ struct NotchResourceBadge: View {
             }
         }
         CATransaction.commit()
+    }
+}
+
+struct ResourceRefreshButton: View {
+    @ObservedObject var resources = NotchResources.shared
+    var body: some View {
+        Group {
+            if resources.loading {
+                HStack(spacing: 7) {
+                    ProgressView().controlSize(.small).tint(.cyan)
+                    Text(resources.text("正在刷新…", "Refreshing…")).foregroundStyle(.white)
+                }
+                .padding(.horizontal, 10).padding(.vertical, 6)
+                .background(.cyan.opacity(0.16), in: RoundedRectangle(cornerRadius: 8))
+                .accessibilityLabel(resources.text("正在刷新，请稍候", "Refreshing, please wait"))
+            } else {
+                Button { resources.refreshUsage() } label: {
+                    Label(resources.usageError != nil ? resources.text("刷新失败 · 重试", "Failed · Retry") : resources.justUpdated ? resources.text("已更新", "Updated") : resources.text("刷新", "Refresh"), systemImage: resources.justUpdated ? "checkmark.circle.fill" : "arrow.clockwise")
+                }.buttonStyle(.bordered)
+            }
+        }.font(.system(size: 12, weight: .medium))
+    }
+}
+
+struct ResourcePanel: View {
+    @ObservedObject var resources = NotchResources.shared
+    @AppStorage("notchUsageUsed") private var used = false
+    @AppStorage("notchUsageEnabled") private var usage = true
+    @AppStorage("notchRunnerEnabled") private var runner = true
+    var body: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            HStack {
+                VStack(alignment: .leading, spacing: 3) {
+                    Text(resources.text("系统与用量", "System & usage")).font(.system(size: 19, weight: .semibold))
+                    Text("boringNotch").font(.caption).foregroundStyle(.secondary)
+                }
+                Spacer()
+                Button { resources.openSettings() } label: { Image(systemName: "gearshape").frame(width: 28, height: 28) }
+                    .buttonStyle(.plain).help(resources.text("设置", "Settings"))
+            }
+            if runner {
+                HStack(alignment: .top, spacing: 10) {
+                    VStack(alignment: .leading, spacing: 10) {
+                        HStack { ResourceRunnerPreview().frame(width: 24, height: 16); Text("CPU").foregroundStyle(.secondary) }
+                        Text(resources.cpu.map { "\(Int($0.rounded()))%" } ?? "—").font(.system(size: 28, weight: .semibold, design: .rounded)).monospacedDigit()
+                        CPUTrend(values: resources.cpuHistory).stroke(.cyan, style: StrokeStyle(lineWidth: 1.7, lineCap: .round, lineJoin: .round)).frame(height: 34)
+                        Text(resources.text("最近一分钟", "Last minute")).font(.caption2).foregroundStyle(.secondary)
+                    }.frame(maxWidth: .infinity, alignment: .leading).frame(height: 132, alignment: .top).padding(12).background(.white.opacity(0.05), in: RoundedRectangle(cornerRadius: 14))
+                    VStack(alignment: .leading, spacing: 10) {
+                        Label(resources.text("内存", "Memory"), systemImage: "memorychip").foregroundStyle(.secondary)
+                        Text(resources.memoryUsed.map { String(format: "%.1f", $0 / 1_073_741_824) + " GB" } ?? "—").font(.system(size: 24, weight: .semibold, design: .rounded)).monospacedDigit()
+                        Text(resources.text("共 ", "of ") + String(format: "%.0f GB", Double(ProcessInfo.processInfo.physicalMemory) / 1_073_741_824)).font(.caption).foregroundStyle(.secondary)
+                        ResourceMeter(value: (resources.memoryUsed ?? 0) / Double(ProcessInfo.processInfo.physicalMemory), color: .mint).frame(height: 5)
+                        Text(resources.pressureLabel).font(.caption2).foregroundStyle(resources.memoryPressure == 4 ? .red : resources.memoryPressure == 2 ? .orange : .secondary)
+                    }.frame(maxWidth: .infinity, alignment: .leading).frame(height: 132, alignment: .top).padding(12).background(.white.opacity(0.05), in: RoundedRectangle(cornerRadius: 14))
+                }
+            }
+            if usage {
+                HStack { Text("Codex").font(.headline); Spacer(); ResourceRefreshButton(resources: resources) }
+                Picker(resources.text("额度显示", "Quota display"), selection: $used) {
+                    Text(resources.text("剩余", "Remaining")).tag(false)
+                    Text(resources.text("已用", "Used")).tag(true)
+                }.pickerStyle(.segmented).labelsHidden()
+                if resources.usageError != nil {
+                    Label(resources.text("读取失败 · 以下为上次成功数据", "Read failed · Last successful data"), systemImage: "exclamationmark.triangle.fill")
+                        .font(.caption).foregroundStyle(.orange)
+                }
+                if resources.windows.isEmpty {
+                    Text(resources.loading ? resources.text("正在获取额度，请稍候…", "Fetching quota…") : resources.text("暂无额度数据", "No quota data"))
+                        .foregroundStyle(.secondary).frame(maxWidth: .infinity).padding(.vertical, 20)
+                } else {
+                    ScrollView {
+                        VStack(spacing: 10) {
+                            ForEach(Array(resources.windows.enumerated()), id: \.offset) { _, window in quotaCard(window) }
+                        }
+                    }.frame(height: CGFloat(min(resources.windows.count, 2)) * 108 + CGFloat(max(0, min(resources.windows.count, 2) - 1)) * 10).scrollIndicators(.hidden)
+                }
+                Text((resources.updated.map { resources.text("更新于 ", "Updated ") + $0.formatted(date: .omitted, time: .standard) } ?? resources.text("尚未成功更新", "Not updated yet")) + " · " + resources.text("每 \(Int(resources.usageInterval / 60)) 分钟刷新", "Every \(Int(resources.usageInterval / 60)) min"))
+                    .font(.caption2).foregroundStyle(.secondary)
+            }
+            Divider()
+            HStack {
+                Button(resources.text("打开 Codex", "Open Codex")) { resources.openCodex() }
+                Spacer()
+                Button(resources.text("活动监视器", "Activity Monitor")) { NSWorkspace.shared.open(URL(fileURLWithPath: "/System/Applications/Utilities/Activity Monitor.app")) }
+            }.buttonStyle(.plain).font(.system(size: 12, weight: .medium))
+        }.padding(18).frame(width: 370).background(Color(nsColor: .windowBackgroundColor))
+            .preferredColorScheme(.dark)
+    }
+    private func quotaCard(_ window: NotchQuotaWindow) -> some View {
+        let amount = used ? Int(window.usedPercent.rounded(.up)) : window.remaining
+        return VStack(alignment: .leading, spacing: 10) {
+            HStack {
+                Text(window.minutes == 10080 ? resources.text("每周额度", "Weekly quota") : resources.text("\(window.label) 额度", "\(window.label) quota")).font(.system(size: 13, weight: .medium)).foregroundStyle(.secondary)
+                Spacer()
+                Text("\(amount)%").font(.system(size: 23, weight: .semibold, design: .rounded)).monospacedDigit()
+            }
+            ResourceMeter(value: Double(amount) / 100, color: window.remaining <= 10 ? .orange : .cyan).frame(height: 5)
+            if let reset = window.resetsAt {
+                let date = Date(timeIntervalSince1970: reset)
+                Text(resources.text("重置 ", "Resets ") + date.formatted(.relative(presentation: .numeric)))
+                    .font(.caption).foregroundStyle(.secondary)
+                    .help(date.formatted(date: .complete, time: .shortened))
+            } else { Text(resources.text("重置时间未知", "Reset time unavailable")).font(.caption).foregroundStyle(.secondary) }
+        }.padding(12).frame(height: 108).background(.white.opacity(0.05), in: RoundedRectangle(cornerRadius: 12))
+    }
+}
+
+struct ResourceMeter: View {
+    let value: Double
+    let color: Color
+    var body: some View {
+        GeometryReader { geometry in
+            ZStack(alignment: .leading) {
+                Capsule().fill(.white.opacity(0.09))
+                Capsule().fill(color).frame(width: geometry.size.width * max(0, min(1, value)))
+            }
+        }
+    }
+}
+
+struct CPUTrend: Shape {
+    var values: [Double]
+    func path(in rect: CGRect) -> Path {
+        var path = Path()
+        guard values.count > 1 else { return path }
+        for (index, value) in values.enumerated() {
+            let point = CGPoint(x: rect.width * Double(index) / Double(values.count - 1), y: rect.height * (1 - max(0, min(100, value)) / 100))
+            if index == 0 { path.move(to: point) } else { path.addLine(to: point) }
+        }
+        return path
+    }
+}
+
+private struct ResourceRunnerPreview: NSViewRepresentable {
+    func makeNSView(context: Context) -> NotchRunnerIconView { NotchRunnerIconView(frame: NSRect(x: 0, y: 0, width: 24, height: 16)) }
+    func updateNSView(_ view: NotchRunnerIconView, context: Context) {
+        view.update(framesPerSecond: min(24, 2 + (NotchResources.shared.cpu ?? 0) * 0.25), flipped: UserDefaults.standard.bool(forKey: "notchRunnerFlipped"), reducedMotion: NSWorkspace.shared.accessibilityDisplayShouldReduceMotion)
+    }
+}
+
+struct QuotaWarningCard: View {
+    @ObservedObject private var resources = NotchResources.shared
+    var close: () -> Void
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Label(resources.text("无法读取 Codex 额度", "Unable to read Codex quota"), systemImage: "exclamationmark.triangle.fill")
+                .font(.headline).foregroundStyle(.orange)
+            Text(resources.text("可能出现连接或登录异常，请检查 Codex。", "There may be a connection or sign-in problem. Check Codex."))
+                .font(.system(size: 13)).foregroundStyle(.secondary).lineLimit(2)
+            HStack {
+                ResourceRefreshButton(resources: resources)
+                Button(resources.text("打开 Codex", "Open Codex")) { resources.openCodex() }.buttonStyle(.bordered)
+                Spacer()
+                Button(action: close) { Image(systemName: "xmark").frame(width: 26, height: 26) }.buttonStyle(.plain).help(resources.text("关闭", "Close"))
+            }
+        }.padding(12).environment(\.colorScheme, .dark)
+        .onChange(of: resources.usageError) { if resources.usageError == nil { close() } }
     }
 }

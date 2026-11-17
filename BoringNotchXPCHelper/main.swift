@@ -19,6 +19,10 @@ class ServiceDelegate: NSObject, NSXPCListenerDelegate {
         // Next, set the object that the connection exports. All messages sent on the connection to this service will be sent to the exported object to handle. The connection retains the exported object.
         let exportedObject = BoringNotchXPCHelper()
         newConnection.exportedObject = exportedObject
+        newConnection.remoteObjectInterface = NSXPCInterface(with: NotchMediaKeyReceiver.self)
+        exportedObject.mediaConnection = newConnection
+        newConnection.interruptionHandler = { [weak exportedObject] in exportedObject?.stopMediaKeys(); exportedObject?.booksServer.stop() }
+        newConnection.invalidationHandler = { [weak exportedObject] in exportedObject?.stopMediaKeys(); exportedObject?.booksServer.stop() }
         
         // Resuming the connection allows the system to deliver more incoming messages.
         newConnection.resume()

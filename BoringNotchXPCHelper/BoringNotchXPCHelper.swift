@@ -6,12 +6,87 @@
 //
 
 import Foundation
+import AppKit
 import Darwin
 import ApplicationServices
 import IOKit
 import CoreGraphics
+import CoreServices
 
 class BoringNotchXPCHelper: NSObject, BoringNotchXPCHelperProtocol {
+    let booksServer = RemoteBooksServer()
+    @objc func booksRemote(_ action: String, with reply: @escaping (Data) -> Void) {
+        booksServer.control(action, reply: reply)
+    }
+    weak var mediaConnection: NSXPCConnection?
+    private var mediaTap: CFMachPort?
+    private var mediaSource: CFRunLoopSource?
+    private var mediaCategories = (false, false, false)
+    private var mediaLease = Date.distantPast
+    private var mediaWatchdog: Timer?
+
+    @objc func configureMediaKeys(_ volume: Bool, brightness: Bool, backlight: Bool, with reply: @escaping (Bool) -> Void) {
+        NotchMediaEventLoop.perform {
+            self.mediaCategories = (volume, brightness, backlight)
+            self.mediaLease = Date().addingTimeInterval(3)
+            guard volume || brightness || backlight else { self.stopMediaKeysOnEventLoop(); reply(false); return }
+            guard AXIsProcessTrusted(), self.mediaConnection != nil else { self.stopMediaKeysOnEventLoop(); reply(false); return }
+            if self.mediaTap == nil {
+                let type = CGEventType(rawValue: 14)!
+                self.mediaTap = CGEvent.tapCreate(tap: .cghidEventTap, place: .headInsertEventTap,
+                    options: .defaultTap, eventsOfInterest: CGEventMask(1 << type.rawValue),
+                    callback: { _, type, event, info in
+                        guard let info else { return Unmanaged.passUnretained(event) }
+                        let owner = Unmanaged<BoringNotchXPCHelper>.fromOpaque(info).takeUnretainedValue()
+                        if type == .tapDisabledByTimeout || type == .tapDisabledByUserInput {
+                            if Date() < owner.mediaLease, let tap = owner.mediaTap { CGEvent.tapEnable(tap: tap, enable: true) }
+                            return Unmanaged.passUnretained(event)
+                        }
+                        guard Date() < owner.mediaLease,
+                              let receiver = owner.mediaConnection?.remoteObjectProxyWithErrorHandler({ _ in
+                                  owner.stopMediaKeys()
+                              }) as? NotchMediaKeyReceiver,
+                              let key = NSEvent(cgEvent: event), key.subtype.rawValue == 8 else {
+                            return Unmanaged.passUnretained(event)
+                        }
+                        let code = (key.data1 >> 16) & 0xffff
+                        let enabled: Bool
+                        switch code {
+                        case 0, 1, 7: enabled = owner.mediaCategories.0
+                        case 2, 3: enabled = key.modifierFlags.contains(.command) ? owner.mediaCategories.2 : owner.mediaCategories.1
+                        default: enabled = false
+                        }
+                        guard enabled else { return Unmanaged.passUnretained(event) }
+                        // Forward only supported media-key down events; suppress matching key up too.
+                        if (key.data1 >> 8) & 0xff == 0xA {
+                            receiver.receiveMediaKey(key.data1, flags: key.modifierFlags.rawValue)
+                        }
+                        return nil
+                    }, userInfo: Unmanaged.passUnretained(self).toOpaque())
+                if let tap = self.mediaTap {
+                    self.mediaSource = CFMachPortCreateRunLoopSource(nil, tap, 0)
+                    if let source = self.mediaSource { CFRunLoopAddSource(CFRunLoopGetCurrent(), source, .commonModes) }
+                    CGEvent.tapEnable(tap: tap, enable: true)
+                    self.mediaWatchdog = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { [weak self] _ in
+                        guard let self else { return }
+                        if Date() >= self.mediaLease { self.stopMediaKeysOnEventLoop() }
+                    }
+                }
+            }
+            reply(self.mediaTap.map { CGEvent.tapIsEnabled(tap: $0) } ?? false)
+        }
+    }
+
+    @objc func stopMediaKeys() {
+        NotchMediaEventLoop.perform { self.stopMediaKeysOnEventLoop() }
+    }
+    private func stopMediaKeysOnEventLoop() {
+        if let tap = mediaTap { CGEvent.tapEnable(tap: tap, enable: false); CFMachPortInvalidate(tap) }
+        if let source = mediaSource { CFRunLoopRemoveSource(CFRunLoopGetCurrent(), source, .commonModes) }
+        mediaWatchdog?.invalidate(); mediaWatchdog = nil
+        mediaSource = nil; mediaTap = nil; mediaLease = .distantPast
+    }
+
     @objc func openCodexStatusSocket(with reply: @escaping (FileHandle?, Int32) -> Void) {
         // No caller-supplied path, commands, or data. The existing helper is unsandboxed.
         guard let user = getpwuid(getuid()), let directory = user.pointee.pw_dir else {
@@ -221,5 +296,67 @@ class BoringNotchXPCHelper: NSObject, BoringNotchXPCHelperProtocol {
             }
             return nil
         }()
+    }
+}
+
+// XPC services dispatch requests without running the main CFRunLoop. Event taps
+// need a continuously serviced run loop, independent of XPC or quota operations.
+private enum NotchMediaEventLoop {
+    private static let loop: CFRunLoop = {
+        let ready = DispatchSemaphore(value: 0)
+        var result: CFRunLoop!
+        let thread = Thread {
+            result = CFRunLoopGetCurrent()
+            let keepAlive = Timer(timeInterval: 3600, repeats: true) { _ in }
+            RunLoop.current.add(keepAlive, forMode: .default)
+            ready.signal()
+            CFRunLoopRun()
+        }
+        thread.name = "boringNotch.media-keys"
+        thread.qualityOfService = .userInteractive
+        thread.start()
+        ready.wait()
+        return result
+    }()
+
+    static func perform(_ action: @escaping () -> Void) {
+        let runLoop = loop
+        CFRunLoopPerformBlock(runLoop, CFRunLoopMode.defaultMode.rawValue, action)
+        CFRunLoopWakeUp(runLoop)
+    }
+}
+
+// User-initiated lookup only: no clipboard access, key simulation or background text capture.
+extension BoringNotchXPCHelper {
+    @objc func selectedDictionaryText(_ pid: Int32, with reply: @escaping (String, Bool) -> Void) {
+        DispatchQueue.global(qos: .userInitiated).async {
+            guard AXIsProcessTrusted() else { reply("", false); return }
+            guard pid > 0 else { reply("", true); return }
+            let app = AXUIElementCreateApplication(pid)
+            AXUIElementSetMessagingTimeout(app, 0.5)
+            var value: CFTypeRef?
+            guard AXUIElementCopyAttributeValue(app, kAXFocusedUIElementAttribute as CFString, &value) == .success,
+                  let value, CFGetTypeID(value) == AXUIElementGetTypeID() else { reply("", true); return }
+            let focused = value as! AXUIElement
+            AXUIElementSetMessagingTimeout(focused, 0.5)
+            var subrole: CFTypeRef?
+            _ = AXUIElementCopyAttributeValue(focused, kAXSubroleAttribute as CFString, &subrole)
+            guard (subrole as? String) != "AXSecureTextField" else { reply("", true); return }
+            var selected: CFTypeRef?
+            guard AXUIElementCopyAttributeValue(focused, kAXSelectedTextAttribute as CFString, &selected) == .success,
+                  let text = selected as? String else { reply("", true); return }
+            let word = text.trimmingCharacters(in: .whitespacesAndNewlines)
+            reply(word.count <= 200 ? word : "", true)
+        }
+    }
+
+    @objc func dictionaryDefinition(_ word: String, with reply: @escaping (String?) -> Void) {
+        DispatchQueue.global(qos: .userInitiated).async {
+            let clean = word.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !clean.isEmpty, clean.count <= 200 else { reply(nil); return }
+            let text = clean as CFString
+            let definition = DCSCopyTextDefinition(nil, text, CFRange(location: 0, length: CFStringGetLength(text)))?.takeRetainedValue()
+            reply(definition.map { String(($0 as String).prefix(24000)) })
+        }
     }
 }

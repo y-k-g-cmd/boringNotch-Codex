@@ -154,6 +154,10 @@ struct DraggableProgressBar: View {
 struct SystemHUDCard: View {
     let type: SneakContentType
     let value: CGFloat
+    var compact = true
+    var onChange: (CGFloat) -> Void
+    var onEditing: (Bool) -> Void
+    @AppStorage("systemHUDPercentage") private var showPercentage = true
     private var icon: String {
         switch type {
         case .volume: return value <= 0 ? "speaker.slash.fill" : value < 0.33 ? "speaker.wave.1.fill" : value < 0.66 ? "speaker.wave.2.fill" : "speaker.wave.3.fill"
@@ -162,25 +166,57 @@ struct SystemHUDCard: View {
         }
     }
     var body: some View {
-        VStack(spacing: 16) {
+        VStack(spacing: compact ? 8 : 16) {
             HStack(spacing: 12) {
-                Image(systemName: icon).font(.system(size: 26)).frame(width: 38)
+                Group {
+                    if type == .volume {
+                        Button { VolumeManager.shared.toggleMuteAction() } label: {
+                            Image(systemName: icon).frame(width: compact ? 26 : 38, height: 28)
+                        }.buttonStyle(.plain).help("Toggle mute")
+                    } else {
+                        Image(systemName: icon).frame(width: compact ? 26 : 38, height: 28)
+                    }
+                }.font(.system(size: compact ? 20 : 26))
                 Text(type == .volume ? "Volume" : type == .brightness ? "Brightness" : "Keyboard backlight")
-                    .font(.system(size: 17, weight: .semibold))
+                    .font(.system(size: compact ? 14 : 17, weight: .semibold))
                 Spacer()
-                Text("\(Int(min(1, max(0, value)) * 100))%")
-                    .font(.system(size: 22, weight: .medium, design: .rounded)).monospacedDigit()
+                if showPercentage { Text("\(Int(min(1, max(0, value)) * 100))%")
+                    .font(.system(size: compact ? 18 : 22, weight: .medium, design: .rounded)).monospacedDigit()
                     .contentTransition(.numericText())
+                }
             }
             GeometryReader { geometry in
+                let level = min(1, max(0, value))
+                let travel = max(1, geometry.size.width - 16)
                 ZStack(alignment: .leading) {
-                    Capsule().fill(.white.opacity(0.12))
+                    Capsule().fill(Color.white.opacity(0.24)).frame(height: 8)
                     Capsule().fill(Defaults[.systemEventIndicatorUseAccent] ? Color.effectiveAccent : .white)
-                        .frame(width: geometry.size.width * min(1, max(0, value)))
+                        .frame(width: 8 + travel * level, height: 8)
+                    Circle().fill(.white).frame(width: 16, height: 16)
+                        .offset(x: travel * level)
                 }
-            }.frame(height: 7)
+                .frame(height: 24)
+                .contentShape(Rectangle())
+                .gesture(DragGesture(minimumDistance: 0)
+                    .onChanged { gesture in
+                        onEditing(true)
+                        onChange(min(1, max(0, (gesture.location.x - 8) / travel)))
+                    }
+                    .onEnded { _ in onEditing(false) })
+            }.frame(height: 24)
+                .accessibilityElement(children: .ignore)
+                .accessibilityLabel(Text(type == .volume ? "Volume" : type == .brightness ? "Brightness" : "Keyboard backlight"))
+                .accessibilityValue(Text("\(Int(min(1, max(0, value)) * 100))%"))
+                .accessibilityAdjustableAction { direction in
+                    switch direction {
+                    case .increment: onChange(min(1, value + 0.05))
+                    case .decrement: onChange(max(0, value - 0.05))
+                    @unknown default: break
+                    }
+                }
+
         }
-        .padding(.horizontal, 34).frame(maxWidth: .infinity, maxHeight: .infinity)
+        .padding(.horizontal, compact ? 2 : 34).frame(maxWidth: .infinity, maxHeight: .infinity)
         .foregroundStyle(.white)
         .animation(.linear(duration: 0.08), value: value)
     }

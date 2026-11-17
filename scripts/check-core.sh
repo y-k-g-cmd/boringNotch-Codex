@@ -14,5 +14,6 @@ xcrun swiftc -swift-version 5 -module-cache-path "$build/module-cache" \
 xcrun swiftc -typecheck -swift-version 5 -module-cache-path "$build/module-cache" \
   "$root/boringNotch/XPCHelperClient/BoringNotchXPCHelperProtocol.swift" \
   "$root/boringNotch/extensions/PanGesture.swift" \
+  "$root/Tests/NotchIntegration/SettingsWindowStub.swift" \
   "$root"/boringNotch/components/Codex/*.swift
 plutil -lint "$root/boringNotch.xcodeproj/project.pbxproj"

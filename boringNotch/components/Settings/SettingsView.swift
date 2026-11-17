@@ -170,6 +170,7 @@ struct GeneralSettings: View {
 
     var body: some View {
         Form {
+            BooksRemotePreferences()
             Section {
                 Toggle(isOn: Binding(
                     get: { Defaults[.menubarIcon] },
@@ -488,12 +489,15 @@ struct Charge: View {
 //}
 
 struct HUD: View {
+    @AppStorage("mediaKeyInterceptionActive") private var mediaKeysActive = false
     @EnvironmentObject var vm: BoringViewModel
     @Default(.inlineHUD) var inlineHUD
     @Default(.enableGradient) var enableGradient
     @Default(.optionKeyAction) var optionKeyAction
     @ObservedObject var coordinator = BoringViewCoordinator.shared
     @State private var accessibilityAuthorized = false
+    @AppStorage("systemHUDCompact") private var compactHUD = true
+    @AppStorage("systemHUDPercentage") private var hudPercentage = true
     @AppStorage("systemHUDExpand") private var expandSystemHUD = true
     @AppStorage("systemHUDEnabled") private var systemHUD = true
     @AppStorage("systemHUDVolume") private var hudVolume = true
@@ -504,7 +508,12 @@ struct HUD: View {
         Form {
             Section("刘海系统提示") {
                 Toggle("显示系统调整提示", isOn: $systemHUD)
-                Toggle("使用完整卡片展开动画", isOn: $expandSystemHUD)
+                Toggle("展开系统提示卡片", isOn: $expandSystemHUD)
+                Picker("提示卡片样式", selection: $compactHUD) {
+                    Text("紧凑卡片").tag(true)
+                    Text("完整卡片").tag(false)
+                }.disabled(!systemHUD || !expandSystemHUD)
+                Toggle("显示百分比", isOn: $hudPercentage)
                 Toggle("音量与静音", isOn: $hudVolume).disabled(!systemHUD)
                 Toggle("屏幕亮度", isOn: $hudBrightness).disabled(!systemHUD)
                 Toggle("键盘背光", isOn: $hudBacklight).disabled(!systemHUD)
@@ -520,6 +529,8 @@ struct HUD: View {
                     .font(.caption).foregroundStyle(.secondary)
             }
             Section {
+                Text(mediaKeysActive ? "媒体键接管已启动" : "媒体键接管未启动")
+                    .font(.caption).foregroundStyle(mediaKeysActive ? .green : .secondary)
                 Defaults.Toggle(key: .hudReplacement) {
                    Text("Replace system HUD")
                 }
@@ -527,7 +538,7 @@ struct HUD: View {
                 .help("Enable Accessibility in System Settings → Privacy & Security → Accessibility")
                 .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
                     Task { @MainActor in
-                        let helper = MediaKeyInterceptor.shared.isAccessibilityAuthorized()
+                        let helper = await MediaKeyInterceptor.shared.isAccessibilityAuthorized()
                             accessibilityAuthorized = helper
                         }
                     }
@@ -540,11 +551,16 @@ struct HUD: View {
 
                         HStack(spacing: 12) {
                             Button("Request Accessibility") {
-                                // Use unsandboxed XPC helper if available so the system prompt is shown
+                                // Request access for the main app and open its permission settings.
                                 MediaKeyInterceptor.shared.requestAccessibilityAuthorization()
                             }
                             .buttonStyle(.borderedProminent)
+                            Button("定位当前应用") {
+                                NSWorkspace.shared.activateFileViewerSelecting([Bundle.main.bundleURL])
+                            }
                         }
+                        Text("在辅助功能中开启当前自定义版；若列表中没有，点加号添加右侧按钮定位的应用。返回后开启替换系统状态提示。")
+                            .font(.caption).foregroundStyle(.secondary)
                     }
                     .padding(.top, 6)
                 }
@@ -592,8 +608,11 @@ struct HUD: View {
         }
         .accentColor(.effectiveAccent)
         .settingsNavigationTitle("HUDs")
+        .onReceive(Timer.publish(every: 2, on: .main, in: .common).autoconnect()) { _ in
+            Task { accessibilityAuthorized = await MediaKeyInterceptor.shared.isAccessibilityAuthorized() }
+        }
         .task {
-            accessibilityAuthorized = MediaKeyInterceptor.shared.isAccessibilityAuthorized()
+            accessibilityAuthorized = await MediaKeyInterceptor.shared.isAccessibilityAuthorized()
         }
         .onReceive(NotificationCenter.default.publisher(for: .accessibilityAuthorizationChanged)) { notification in
             if let granted = notification.userInfo?["granted"] as? Bool {
@@ -945,6 +964,8 @@ struct CodexSettings: View {
     @AppStorage("notchRunnerFPS") private var runnerFPS = 24.0
     @AppStorage("notchUsageUsed") private var usageUsed = false
     @AppStorage("notchUsageInterval") private var usageInterval = 300.0
+    @AppStorage("notchQuotaWarnings") private var quotaWarnings = true
+    @AppStorage("notchQuotaWarningSeconds") private var quotaWarningSeconds = 6.0
     @ObservedObject private var monitor = CodexMonitor.shared
     @AppStorage("codexCompletionReminderDuration") private var completionReminderDuration: Double = 6
     private var completionSeconds: Double { CodexReminderTiming.completionDuration(completionReminderDuration) }
@@ -968,7 +989,13 @@ struct CodexSettings: View {
                     Picker("额度显示方式", selection: $usageUsed) { Text("剩余").tag(false); Text("已用").tag(true) }
                     Stepper(value: $usageInterval, in: 60...900, step: 60) { Text("刷新间隔：\(Int(usageInterval / 60)) 分钟") }
                     LabeledContent("额度") { Text(resources.quotaSummary) }
-                    Button("刷新用量") { resources.refreshUsage() }.disabled(resources.loading)
+                    ResourceRefreshButton(resources: resources)
+                    Toggle("额度读取失败时提醒可能断联", isOn: $quotaWarnings)
+                    if quotaWarnings {
+                        Stepper(value: $quotaWarningSeconds, in: 3...30, step: 1) {
+                            Text("额度异常提醒时长：\(Int(quotaWarningSeconds)) 秒")
+                        }
+                    }
                     if resources.usageError != nil { Text("用量读取失败，请确认 Codex 已登录后重试").foregroundStyle(.orange).font(.caption) }
                 }
                 Text("内置于 boringNotch；跑猫速度随 CPU 负载变化，无需启动另外两个应用。")
@@ -1826,6 +1853,7 @@ struct AccentCircleButton: View {
 struct Shortcuts: View {
     var body: some View {
         Form {
+            DictionaryPreferences()
             Section {
                 KeyboardShortcuts.Recorder("Toggle Sneak Peek:", name: .toggleSneakPeek)
             } header: {

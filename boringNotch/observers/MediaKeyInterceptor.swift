@@ -13,7 +13,7 @@ import Defaults
 
 private let kSystemDefinedEventType = CGEventType(rawValue: 14)!
 
-final class MediaKeyInterceptor {
+final class MediaKeyInterceptor: NSObject, NotchMediaKeyReceiver {
     static let shared = MediaKeyInterceptor()
 
     private enum NXKeyType: Int { case soundUp = 0, soundDown = 1, brightnessUp = 2, brightnessDown = 3, mute = 7 }
@@ -23,67 +23,87 @@ final class MediaKeyInterceptor {
     private let volumeStep: Float = 1.0 / 16.0
     private let brightnessStep: Float = 1.0 / 16.0
 
-    private init() {}
+    private override init() { super.init() }
 
-    func isAccessibilityAuthorized() -> Bool {
-        return AXIsProcessTrusted()
+    private var helperConnection: NSXPCConnection?
+    private var heartbeat: Timer?
+
+    func isAccessibilityAuthorized() async -> Bool {
+        await XPCHelperClient.shared.isAccessibilityAuthorized()
     }
 
     func start(requireAccessibility: Bool = true, promptIfNeeded: Bool = false) {
-        guard eventTap == nil else { return }
-
-        if requireAccessibility && !isAccessibilityAuthorized() {
-            if promptIfNeeded {
-                Task { @MainActor in
-                    let granted = await self.ensureAccessibilityAuthorization(promptIfNeeded: true)
-                    if granted {
-                        // Start again but don't prompt now
-                        self.start(requireAccessibility: false, promptIfNeeded: false)
-                    }
-                }
-            }
-            return
+        guard helperConnection == nil else { return }
+        let connection = NSXPCConnection(serviceName: "\(Bundle.main.bundleIdentifier!).BoringNotchXPCHelper")
+        connection.remoteObjectInterface = NSXPCInterface(with: BoringNotchXPCHelperProtocol.self)
+        connection.exportedInterface = NSXPCInterface(with: NotchMediaKeyReceiver.self)
+        connection.exportedObject = self
+        connection.interruptionHandler = { [weak self] in
+            DispatchQueue.main.async { self?.stop() }
         }
+        connection.invalidationHandler = { [weak self] in
+            DispatchQueue.main.async { self?.stop() }
+        }
+        helperConnection = connection
+        connection.resume()
+        refreshMediaLease()
+        let timer = Timer(timeInterval: 1, repeats: true) { [weak self] _ in self?.refreshMediaLease() }
+        heartbeat = timer
+        RunLoop.main.add(timer, forMode: .common)
+        if promptIfNeeded {
+            Task { if !(await self.isAccessibilityAuthorized()) { self.requestAccessibilityAuthorization() } }
+        }
+    }
 
-        let mask = (1 << kSystemDefinedEventType.rawValue)
-        eventTap = CGEvent.tapCreate(
-            tap: .cghidEventTap,
-            place: .headInsertEventTap,
-            options: .defaultTap,
-            eventsOfInterest: CGEventMask(mask),
-            callback: { _, type, cgEvent, userInfo in
-                guard let userInfo else { return Unmanaged.passUnretained(cgEvent) }
-                let interceptor = Unmanaged<MediaKeyInterceptor>.fromOpaque(userInfo).takeUnretainedValue()
-                if type == .tapDisabledByTimeout || type == .tapDisabledByUserInput {
-                    if let tap = interceptor.eventTap { CGEvent.tapEnable(tap: tap, enable: true) }
-                    return Unmanaged.passUnretained(cgEvent)
-                }
-                return interceptor.handleSystemDefined(event: cgEvent)
-            },
-            userInfo: UnsafeMutableRawPointer(Unmanaged.passUnretained(self).toOpaque())
-        )
-        if let eventTap {
-            runLoopSource = CFMachPortCreateRunLoopSource(kCFAllocatorDefault, eventTap, 0)
-            if let runLoopSource { CFRunLoopAddSource(CFRunLoopGetMain(), runLoopSource, .commonModes) }
-            CGEvent.tapEnable(tap: eventTap, enable: true)
+    private func refreshMediaLease() {
+        guard let service = helperConnection?.remoteObjectProxyWithErrorHandler({ _ in }) as? BoringNotchXPCHelperProtocol else { return }
+        service.configureMediaKeys(SystemHUDMonitor.enabled(.volume), brightness: SystemHUDMonitor.enabled(.brightness),
+                                   backlight: SystemHUDMonitor.enabled(.backlight)) { enabled in
+            UserDefaults.standard.set(enabled, forKey: "mediaKeyInterceptionActive")
         }
     }
 
     func stop() {
-        if let eventTap { CGEvent.tapEnable(tap: eventTap, enable: false) }
-        if let runLoopSource { CFRunLoopRemoveSource(CFRunLoopGetMain(), runLoopSource, .commonModes) }
-        runLoopSource = nil
-        eventTap = nil
+        heartbeat?.invalidate(); heartbeat = nil
+        let connection = helperConnection; helperConnection = nil
+        (connection?.remoteObjectProxy as? BoringNotchXPCHelperProtocol)?.stopMediaKeys()
+        connection?.interruptionHandler = nil; connection?.invalidationHandler = nil
+        connection?.invalidate()
+        UserDefaults.standard.set(false, forKey: "mediaKeyInterceptionActive")
     }
 
-      func requestAccessibilityAuthorization() {
-          let options = [kAXTrustedCheckOptionPrompt.takeUnretainedValue() as String: true] as CFDictionary
-          _ = AXIsProcessTrustedWithOptions(options)
+    func receiveMediaKey(_ data: Int, flags: UInt) {
+        // No ordinary keyboard text is forwarded. Reuse the existing adjustment logic
+        // locally without posting a synthetic event to the system.
+        DispatchQueue.main.async {
+            guard self.helperConnection != nil,
+                  let event = NSEvent.otherEvent(with: .systemDefined, location: .zero,
+                      modifierFlags: NSEvent.ModifierFlags(rawValue: flags), timestamp: 0,
+                      windowNumber: 0, context: nil, subtype: 8, data1: data, data2: 0),
+                  let cgEvent = event.cgEvent else { return }
+            _ = self.handleSystemDefined(event: cgEvent)
+        }
+    }
+
+    func requestAccessibilityAuthorization() {
+        XPCHelperClient.shared.requestAccessibilityAuthorization()
+        // macOS may suppress a repeated prompt. Always provide a visible route
+        // to the permission page; the user still grants access in System Settings.
+        DispatchQueue.main.async {
+            let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility")!
+            NSWorkspace.shared.open(url, configuration: NSWorkspace.OpenConfiguration()) { _, error in
+                guard error != nil else { return }
+                DispatchQueue.main.async {
+                    NSWorkspace.shared.open(URL(fileURLWithPath: "/System/Applications/System Settings.app"))
+                }
+            }
+        }
     }
 
     func ensureAccessibilityAuthorization(promptIfNeeded: Bool = false) async -> Bool {
-        if promptIfNeeded && !isAccessibilityAuthorized() { requestAccessibilityAuthorization() }
-        return isAccessibilityAuthorized()
+        let granted = await isAccessibilityAuthorized()
+        if promptIfNeeded && !granted { requestAccessibilityAuthorization() }
+        return granted
     }
 
 

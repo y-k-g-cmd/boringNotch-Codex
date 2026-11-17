@@ -18,6 +18,22 @@ import UniformTypeIdentifiers
 struct ContentView: View {
     @EnvironmentObject var vm: BoringViewModel
     private let codexMonitor = CodexMonitor.shared
+    @ObservedObject private var dictionary = NotchDictionary.shared
+    @State private var quotaWarningPresented = false
+    @State private var quotaWarningTask: Task<Void, Never>?
+    @State private var quotaWarningUntil = Date.distantPast
+    @State private var dictionarySessionActive = false
+    private var dictionaryPresented: Bool {
+        (dictionary.visible || dictionarySessionActive) && dictionary.screenID == vm.screenUUID
+    }
+    private var dictionarySize: CGSize {
+        let contentHeight: CGFloat = dictionary.entry == nil ? 90 : 128
+        return CGSize(width: 440, height: min(openNotchSize.height, max(24, vm.effectiveClosedNotchHeight) + 20 + contentHeight))
+    }
+
+
+    @AppStorage("systemHUDCompact") private var compactSystemHUD = true
+    @State private var hudDragging = false
     @AppStorage("systemHUDExpand") private var expandSystemHUD = true
     @State private var systemHUDOpened = false
     @State private var presentedHUDType: SneakContentType = .volume
@@ -115,6 +131,7 @@ struct ContentView: View {
                         : cornerRadiusInsets.closed.bottom
                     )
                     .padding([.horizontal, .bottom], vm.notchState == .open ? 12 : 0)
+                    .frame(width: vm.notchState == .open ? vm.notchSize.width : nil)
                     .clipShape(currentNotchShape)
                     .background {
                         // Only the solid shell casts a shadow, independent of live card content.
@@ -148,9 +165,9 @@ struct ContentView: View {
                         handleHover(hovering)
                     }
                     .onTapGesture {
-                        doOpen()
+                        if !systemHUDOpened && !dictionaryPresented && !quotaWarningPresented { doOpen() }
                     }
-                    .pageSwipe(enabled: horizontalPageSwipe && vm.notchState == .open && !vm.anyDropZoneTargeting && !ShelfSelectionModel.shared.isDragging, excludingTaskRegions: coordinator.currentView == .codex && codexTaskNavigation == "region") { step in
+                    .pageSwipe(enabled: !dictionaryPresented && horizontalPageSwipe && vm.notchState == .open && !vm.anyDropZoneTargeting && !ShelfSelectionModel.shared.isDragging, excludingTaskRegions: coordinator.currentView == .codex && codexTaskNavigation == "region") { step in
                         let pages: [NotchViews] = Defaults[.boringShelf] ? [.home, .shelf, .codex] : [.home, .codex]
                         guard let index = pages.firstIndex(of: coordinator.currentView) else { return }
                         let next = max(0, min(pages.count - 1, index + step))
@@ -229,10 +246,36 @@ struct ContentView: View {
                             if vm.notchState == .open { closeAfterHover() }
                         }
                     }
+                    .onChange(of: dictionary.sequence) {
+                        guard dictionary.visible && dictionary.screenID == vm.screenUUID else { return }
+                        dictionarySessionActive = true
+                        quotaWarningTask?.cancel(); quotaWarningPresented = false; quotaWarningUntil = .distantPast
+                        hudCloseTask?.cancel(); hoverTask?.cancel(); codexReminderTask?.cancel()
+                        systemHUDOpened = false
+                        withAnimation(animationSpring) {
+                            vm.open(preferredView: coordinator.currentView, size: dictionarySize)
+                        }
+                    }
                     .onReceive(coordinator.$sneakPeek) { state in handleSystemHUD(state) }
-                    .onChange(of: coordinator.currentView) { systemHUDOpened = false }
+                    .onChange(of: compactSystemHUD) {
+                        if systemHUDOpened && vm.notchState == .open {
+                            withAnimation(animationSpring) { vm.notchSize = systemHUDSize }
+                        }
+                    }
+                    .onChange(of: coordinator.currentView) {
+                        if vm.notchState == .open { quotaWarningPresented = false; quotaWarningTask?.cancel() }
+                        if dictionaryPresented && vm.notchState == .open {
+                            dictionarySessionActive = false
+                            dictionary.dismiss()
+                        }
+                        if systemHUDOpened && vm.notchState == .open {
+                            withAnimation(animationSpring) { vm.notchSize = openNotchSize }
+                        }
+                        systemHUDOpened = false
+                    }
                     .onChange(of: codexState.reminderSequence) { showCodexReminder() }
                     .onChange(of: vm.notchState) { _, newState in
+                        handleDictionaryClose(isClosed: newState == .closed)
                         if newState == .closed && isHovering {
                             withAnimation {
                                 isHovering = false
@@ -385,7 +428,11 @@ struct ContentView: View {
                       } else if !coordinator.expandingView.show && vm.notchState == .closed && (!musicManager.isPlaying && musicManager.isPlayerIdle) && Defaults[.showNotHumanFace] && !vm.hideOnClosed  {
                           BoringFaceAnimation()
                        } else if vm.notchState == .open {
-                           BoringHeader()
+                           Group {
+                               if dictionaryPresented || quotaWarningPresented || (systemHUDOpened && compactSystemHUD) {
+                                   Color.clear
+                               } else { BoringHeader() }
+                           }
                                .frame(height: max(24, vm.effectiveClosedNotchHeight))
                                .opacity(gestureProgress != 0 ? 1.0 - min(abs(gestureProgress) * 0.1, 0.3) : 1.0)
                        } else {
@@ -438,9 +485,28 @@ struct ContentView: View {
               .zIndex(2)
             if vm.notchState == .open {
                 VStack(alignment: .leading, spacing: 0) {
-                    if systemHUDOpened {
-                        SystemHUDCard(type: presentedHUDType, value: presentedHUDValue)
-                            .frame(height: max(0, openNotchSize.height - max(24, vm.effectiveClosedNotchHeight) - 20))
+                    if dictionaryPresented {
+                        NotchDictionaryCard {
+                            dictionary.dismiss()
+                            withAnimation(animationSpring) { vm.close() }
+                        }
+                        .onChange(of: dictionarySize) {
+                            withAnimation(animationSpring) { vm.notchSize = dictionarySize }
+                        }
+                        .frame(height: max(0, vm.notchSize.height - max(24, vm.effectiveClosedNotchHeight) - 20))
+                    } else if quotaWarningPresented {
+                        QuotaWarningCard { withAnimation(animationSpring) { vm.close() } }
+                            .frame(height: max(0, vm.notchSize.height - max(24, vm.effectiveClosedNotchHeight) - 20))
+                    } else if systemHUDOpened {
+                        SystemHUDCard(type: presentedHUDType, value: presentedHUDValue,
+                                      compact: compactSystemHUD, onChange: updateHUDLevel,
+                                      onEditing: { editing in
+                                          hudDragging = editing
+                                          if !editing {
+                                              coordinator.toggleSneakPeek(status: true, type: presentedHUDType, value: presentedHUDValue)
+                                          }
+                                      })
+                            .frame(height: max(0, vm.notchSize.height - max(24, vm.effectiveClosedNotchHeight) - 20))
                     } else {
                     switch coordinator.currentView {
                     case .home:
@@ -465,6 +531,7 @@ struct ContentView: View {
                 .opacity(gestureProgress != 0 ? 1.0 - min(abs(gestureProgress) * 0.1, 0.3) : 1.0)
             }
         }
+         .onReceive(NotificationCenter.default.publisher(for: NotchResources.quotaWarning)) { _ in showQuotaWarning() }
          .onDrop(of: [ShelfInternalTransfer.type, .fileURL, .url, .utf8PlainText, .plainText, .data], delegate: GeneralDropTargetDelegate(
             isTargeted: $vm.generalDropTargeting,
             enabled: Defaults[.boringShelf] && coordinator.currentView == .shelf,
@@ -473,6 +540,31 @@ struct ContentView: View {
                 let zone = UserDefaults.standard.string(forKey: "shelfActiveZone").flatMap(ShelfZone.init(rawValue:)) ?? .copy
                 return ShelfStateViewModel.shared.acceptDrop(providers, into: zone)
             }))
+    }
+
+    private func handleDictionaryClose(isClosed: Bool) {
+        if isClosed && quotaWarningPresented {
+            NotchResources.shared.recordQuotaDiagnostic("closed")
+            quotaWarningTask?.cancel(); quotaWarningUntil = .distantPast
+            Task { @MainActor in
+                try? await Task.sleep(for: .milliseconds(600))
+                if vm.notchState == .closed { quotaWarningPresented = false }
+            }
+        }
+        if !isClosed {
+            if Date() >= quotaWarningUntil { quotaWarningPresented = false }
+            if !dictionary.visible { dictionarySessionActive = false }
+            return
+        }
+        guard dictionaryPresented else { return }
+        dictionary.dismiss()
+        let sequence = dictionary.sequence
+        Task { @MainActor in
+            // Keep the outgoing card's identity until its removal transition has finished.
+            try? await Task.sleep(for: .milliseconds(600))
+            guard vm.notchState == .closed, dictionary.sequence == sequence else { return }
+            dictionarySessionActive = false
+        }
     }
 
     @ViewBuilder
@@ -614,13 +706,45 @@ struct ContentView: View {
     }
 
     private func closeAfterHover() {
-        guard !(systemHUDOpened && coordinator.sneakPeek.show && isSystemHUD) else { return }
+        guard !dictionaryPresented else { return }
+        guard !hudDragging, !(systemHUDOpened && coordinator.sneakPeek.show && isSystemHUD) else { return }
         guard !vm.isMouseHovering(), !ShelfSelectionModel.shared.isDragging,
               !vm.anyDropZoneTargeting, !vm.isBatteryPopoverActive,
               !SharingStateManager.shared.preventNotchClose else { return }
+        guard Date() >= quotaWarningUntil else { return }
         guard coordinator.currentView != .codex || Date() >= codexReminderUntil else { return }
         guard (NSApp.keyWindow as? CodexInputWindow)?.codexInputEnabled != true else { return }
         vm.close()
+    }
+
+    private func showQuotaWarning() {
+        guard vm.screenUUID == coordinator.selectedScreenUUID else { return }
+        quotaWarningTask?.cancel()
+        quotaWarningTask = Task { @MainActor in
+            while dictionaryPresented || vm.anyDropZoneTargeting || ShelfSelectionModel.shared.isDragging || SharingStateManager.shared.preventNotchClose || Date() < codexReminderUntil || (NSApp.keyWindow as? CodexInputWindow)?.codexInputEnabled == true {
+                try? await Task.sleep(for: .milliseconds(300))
+                guard !Task.isCancelled else { return }
+            }
+            let resources = NotchResources.shared
+            guard resources.warningEnabled, resources.usageEnabled, resources.usageError != nil, codexMonitor.connected else { return }
+            hoverTask?.cancel(); systemHUDOpened = false
+            withAnimation(animationSpring) {
+                vm.open(preferredView: coordinator.currentView, size: CGSize(width: 520, height: openNotchSize.height))
+                quotaWarningPresented = true
+            }
+            resources.recordQuotaDiagnostic("presented")
+            quotaWarningUntil = Date().addingTimeInterval(resources.warningSeconds)
+            NotchHapticFeedback.perform(enabled: Defaults[.enableHaptics])
+            try? await Task.sleep(for: .seconds(resources.warningSeconds))
+            guard !Task.isCancelled else { return }
+            quotaWarningUntil = .distantPast
+            while vm.isMouseHovering() || resources.loading {
+                try? await Task.sleep(for: .milliseconds(200))
+                guard !Task.isCancelled else { return }
+            }
+            guard quotaWarningPresented, !vm.anyDropZoneTargeting, !ShelfSelectionModel.shared.isDragging else { return }
+            withAnimation(animationSpring) { vm.close() }
+        }
     }
 
     private func showCodexReminder() {
@@ -628,7 +752,7 @@ struct ContentView: View {
         guard vm.screenUUID == coordinator.selectedScreenUUID else { return }
         codexReminderTask?.cancel()
         codexReminderTask = Task { @MainActor in
-            while vm.anyDropZoneTargeting || ShelfSelectionModel.shared.isDragging || SharingStateManager.shared.preventNotchClose {
+            while dictionaryPresented || vm.anyDropZoneTargeting || ShelfSelectionModel.shared.isDragging || SharingStateManager.shared.preventNotchClose {
                 try? await Task.sleep(for: .milliseconds(300))
                 guard !Task.isCancelled else { return }
             }
@@ -637,6 +761,7 @@ struct ContentView: View {
             let duration: Double = codexMonitor.reminderNeedsAttention ? 12 : codexMonitor.completionReminderSeconds
             codexReminderUntil = Date().addingTimeInterval(duration)
             codexMonitor.beginReminderPresentation()
+            quotaWarningTask?.cancel(); quotaWarningPresented = false; quotaWarningUntil = .distantPast
             systemHUDOpened = false
             doOpen(preferredView: .codex)
             NotchHapticFeedback.perform(enabled: Defaults[.enableHaptics])
@@ -649,7 +774,13 @@ struct ContentView: View {
         }
     }
 
+    private var systemHUDSize: CGSize {
+        compactSystemHUD ? CGSize(width: max(340, vm.closedNotchSize.width + 80),
+                                 height: max(110, vm.effectiveClosedNotchHeight + 80)) : openNotchSize
+    }
+
     private func handleSystemHUD(_ state: sneakPeek) {
+        guard !dictionaryPresented else { return }
         guard vm.screenUUID == coordinator.selectedScreenUUID else { return }
         let active = state.show && [.volume, .brightness, .backlight].contains(state.type)
         if active && expandSystemHUD {
@@ -657,11 +788,19 @@ struct ContentView: View {
             presentedHUDType = state.type; presentedHUDValue = state.value
             if vm.notchState == .closed && !ShelfSelectionModel.shared.isDragging && !vm.anyDropZoneTargeting {
                 systemHUDOpened = true
-                doOpen(preferredView: coordinator.currentView)
+                withAnimation(animationSpring) {
+                    vm.open(preferredView: coordinator.currentView,
+                            size: systemHUDSize)
+                }
             }
         } else if systemHUDOpened && vm.notchState == .open {
             hudCloseTask?.cancel()
             hudCloseTask = Task { @MainActor in
+                // Keep controls available while hovered or dragging, then close the same shell.
+                while vm.isMouseHovering() || hudDragging {
+                    try? await Task.sleep(for: .milliseconds(100))
+                    guard !Task.isCancelled else { return }
+                }
                 if !vm.isMouseHovering() && !ShelfSelectionModel.shared.isDragging && !vm.anyDropZoneTargeting {
                     withAnimation(animationSpring) { vm.close() }
                     try? await Task.sleep(for: .milliseconds(400))
@@ -670,6 +809,18 @@ struct ContentView: View {
                 systemHUDOpened = false
             }
         }
+    }
+
+    private func updateHUDLevel(_ value: CGFloat) {
+        let level = min(1, max(0, value))
+        presentedHUDValue = level
+        switch presentedHUDType {
+        case .volume: VolumeManager.shared.setAbsolute(Float32(level))
+        case .brightness: BrightnessManager.shared.setAbsolute(value: Float32(level))
+        case .backlight: KeyboardBacklightManager.shared.setAbsolute(value: Float32(level))
+        default: break
+        }
+        coordinator.toggleSneakPeek(status: true, type: presentedHUDType, value: level)
     }
 
     private func doOpen(preferredView: NotchViews? = nil) {

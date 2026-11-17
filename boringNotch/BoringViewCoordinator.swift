@@ -129,7 +129,7 @@ class BoringViewCoordinator: ObservableObject {
         ) { [weak self] _ in
             Task { @MainActor in
                 guard let self = self else { return }
-                let granted = MediaKeyInterceptor.shared.isAccessibilityAuthorized()
+                let granted = await MediaKeyInterceptor.shared.isAccessibilityAuthorized()
                 if !granted {
                     // If permission was revoked, disable HUD replacement
                     Defaults[.hudReplacement] = false
@@ -154,7 +154,7 @@ class BoringViewCoordinator: ObservableObject {
                     if change.newValue {
                         self.hudEnableTask = Task { @MainActor in
                             // Check prior authorization so we only restart if permissions were newly granted
-                            let priorAuthorized = MediaKeyInterceptor.shared.isAccessibilityAuthorized()
+                            let priorAuthorized = await MediaKeyInterceptor.shared.isAccessibilityAuthorized()
 
                             MediaKeyInterceptor.shared.start(requireAccessibility: true, promptIfNeeded: true)
 
@@ -183,7 +183,7 @@ class BoringViewCoordinator: ObservableObject {
         // On startup, ensure the hudReplacement state reflects current authorization
         Task { @MainActor in
             if Defaults[.hudReplacement] {
-                let authorized = MediaKeyInterceptor.shared.isAccessibilityAuthorized()
+                let authorized = await MediaKeyInterceptor.shared.isAccessibilityAuthorized()
                 if !authorized {
                     Defaults[.hudReplacement] = false
                 } else {

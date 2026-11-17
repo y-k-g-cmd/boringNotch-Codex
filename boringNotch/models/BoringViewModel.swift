@@ -189,7 +189,7 @@ class BoringViewModel: NSObject, ObservableObject {
         return false
     }
 
-    func open(preferredView: NotchViews? = nil) {
+    func open(preferredView: NotchViews? = nil, size: CGSize? = nil) {
         if let preferredView {
             coordinator.currentView = preferredView
         } else if notchState == .closed {
@@ -205,7 +205,7 @@ class BoringViewModel: NSObject, ObservableObject {
                 }
             }
         }
-        self.notchSize = openNotchSize
+        self.notchSize = size ?? openNotchSize
         self.notchState = .open
         
         // Force music information update when notch is opened

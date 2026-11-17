@@ -60,6 +60,7 @@ final class XPCHelperClient {
     
     @MainActor
     private func notifyAuthorizationChange(_ granted: Bool) {
+        UserDefaults.standard.set(granted, forKey: "mediaKeyAccessibilityAuthorized")
         guard lastKnownAuthorization != granted else { return }
         lastKnownAuthorization = granted
         NotificationCenter.default.post(
@@ -69,6 +70,30 @@ final class XPCHelperClient {
         )
     }
     
+
+    nonisolated func booksRemote(_ action: String) async throws -> Data {
+        let service = await MainActor.run { ensureRemoteService() }
+        return try await service.withContinuation { service, continuation in
+            service.booksRemote(action) { continuation.resume(returning: $0) }
+        }
+    }
+
+    // MARK: - System dictionary
+    nonisolated func selectedDictionaryText(pid: Int32) async -> (String, Bool) {
+        do {
+            let service = await MainActor.run { ensureRemoteService() }
+            return try await service.withContinuation { service, continuation in
+                service.selectedDictionaryText(pid) { text, authorized in continuation.resume(returning: (text, authorized)) }
+            }
+        } catch { return ("", false) }
+    }
+    nonisolated func dictionaryDefinition(_ word: String) async throws -> String? {
+        let service = await MainActor.run { ensureRemoteService() }
+        return try await service.withContinuation { service, continuation in
+            service.dictionaryDefinition(word) { continuation.resume(returning: $0) }
+        }
+    }
+
     // MARK: - Accessibility
     
     nonisolated func requestAccessibilityAuthorization() {

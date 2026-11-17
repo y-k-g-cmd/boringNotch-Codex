@@ -3,7 +3,7 @@
 ## 前置条件
 
 - macOS 15+ 与完整 Xcode；首次启动并接受许可、安装组件需由使用者本人完成。
-- 本地功能版 271.15 和此公开候选版均在 Xcode 27.1 完成完整构建；公开候选版从新目录解析公开依赖，严格签名检查通过，不承诺旧版 Xcode 可用。
+- 本地功能版及公开版 271.40 均在 Xcode 27.1 完成完整构建；公开候选版从新目录解析公开依赖，严格签名检查通过，不承诺旧版 Xcode 可用。
 - 已提交 `Package.resolved` 和 `BUILD_DEPENDENCIES.json`；首次依赖下载需要网络。不要添加个人 SwiftPM 镜像配置。
 
 ## 本地测试构建
@@ -29,6 +29,10 @@ bash scripts/check-core.sh
 bash scripts/check-interactions.sh
 bash scripts/check-stream.sh
 bash scripts/check-shelf.sh
+bash scripts/check-resources.sh
+bash scripts/check-dictionary.sh
+bash scripts/check-quota-warning.sh
+bash scripts/check-books-remote.sh
 ```
 
 这些检查使用合成数据或隔离状态。不要在 CI 运行 `LiveIPCCheck.swift`；它会尝试连接运行中的 Codex。文件书签检查若缺少 ScopedBookmarksAgent 会明确跳过；这不是完整 Finder 拖放测试。
@@ -41,4 +45,6 @@ GitHub 基础检查只做源码审查；完整 macOS 检查与构建可手动触
 
 ## 测试包复现
 
-在 Xcode Archive 完成后，使用 `scripts/package-beta.sh <归档内的.app路径> <空输出目录> <源码提交SHA>` 打包。脚本核对公开应用身份、版本、最低系统、更新关闭及双架构，随附许可、构建信息、对应源码与校验值。不进行公证或开启自动更新。
+在 Xcode Archive 完成后，使用 `scripts/package-beta.sh <归档内的.app路径> <空输出目录> <源码提交SHA> v0.1.0-beta.3` 打包。脚本核对公开应用身份、版本、最低系统、更新关闭及双架构，随附许可、构建信息、对应源码与校验值。不进行公证或开启自动更新。
+
+随后运行 `bash scripts/package-dmg.sh <上述输出目录> v0.1.0-beta.3`，制作只读 DMG，挂载校验签名及安装链接，并更新 SHA256SUMS.txt。源码提交须与归档构建一致；发布后不替换同名附件。

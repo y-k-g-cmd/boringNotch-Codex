@@ -1,6 +1,918 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+  "额度读取失败时提醒可能断联": {
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Warn about a possible disconnection when quota reading fails"
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "额度读取失败时提醒可能断联"
+        }
+      }
+    }
+  },
+  "额度异常提醒时长：%lld 秒": {
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Quota warning duration: %lld seconds"
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "额度异常提醒时长：%lld 秒"
+        }
+      }
+    }
+  },
+  "手机翻页器": {
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Phone page turner"
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "手机翻页器"
+        }
+      }
+    }
+  },
+  "停止服务": {
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Stop service"
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "停止服务"
+        }
+      }
+    }
+  },
+  "启动服务": {
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Start service"
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "启动服务"
+        }
+      }
+    }
+  },
+  "手机扫码连接": {
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Scan with your phone"
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "手机扫码连接"
+        }
+      }
+    }
+  },
+  "或在 Safari 打开地址，输入配对码。": {
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Or open the address in Safari and enter the pairing code."
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "或在 Safari 打开地址，输入配对码。"
+        }
+      }
+    }
+  },
+  "连接地址": {
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Connection address"
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "连接地址"
+        }
+      }
+    }
+  },
+  "复制地址": {
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Copy address"
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "复制地址"
+        }
+      }
+    }
+  },
+  "停止或重启服务后，旧配对失效。": {
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Stopping or restarting invalidates previous pairings."
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "停止或重启服务后，旧配对失效。"
+        }
+      }
+    }
+  },
+  "正在启动局域网服务…": {
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Starting local network service…"
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "正在启动局域网服务…"
+        }
+      }
+    }
+  },
+  "打开图书": {
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Open Books"
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "打开图书"
+        }
+      }
+    }
+  },
+  "授权辅助功能": {
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Allow Accessibility"
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "授权辅助功能"
+        }
+      }
+    }
+  },
+  "在图书中打开 EPUB 正文，保持 Mac 唤醒。手机与 Mac 连接同一可信 Wi-Fi；翻页时会切到图书。": {
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Open an EPUB in Books and keep your Mac awake. Connect both devices to the same trusted Wi-Fi. Turning pages activates Books."
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "在图书中打开 EPUB 正文，保持 Mac 唤醒。手机与 Mac 连接同一可信 Wi-Fi；翻页时会切到图书。"
+        }
+      }
+    }
+  },
+  "仅在手动启动时开放局域网服务。二维码等同控制凭证，请勿分享；退出应用后服务停止。": {
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "The local service runs only when manually started. Keep the QR code private; it grants control. Quitting the app stops the service."
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "仅在手动启动时开放局域网服务。二维码等同控制凭证，请勿分享；退出应用后服务停止。"
+        }
+      }
+    }
+  },
+  "阅读遥控": {
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Reading remote"
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "阅读遥控"
+        }
+      }
+    }
+  },
+  "翻页服务连接中断，请重新启动": {
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Page turner disconnected. Please restart the service."
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "翻页服务连接中断，请重新启动"
+        }
+      }
+    }
+  },
+  "手机页面资源缺失": {
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "The phone page resource is missing."
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "手机页面资源缺失"
+        }
+      }
+    }
+  },
+  "无法生成配对凭证": {
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Unable to generate pairing credentials."
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "无法生成配对凭证"
+        }
+      }
+    }
+  },
+  "没有可用的局域网 IPv4，请连接 Wi-Fi 后重试": {
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "No local IPv4 address available. Connect to Wi-Fi and retry."
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "没有可用的局域网 IPv4，请连接 Wi-Fi 后重试"
+        }
+      }
+    }
+  },
+  "无法启动局域网服务，请检查本地网络权限": {
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Unable to start the service. Check Local Network permission."
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "无法启动局域网服务，请检查本地网络权限"
+        }
+      }
+    }
+  },
+  "无法启动局域网服务": {
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Unable to start the local network service."
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "无法启动局域网服务"
+        }
+      }
+    }
+  },
+  "默认英语音标": {
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Default English pronunciation"
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "默认英语音标"
+        }
+      }
+    }
+  },
+  "英式英语": {
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "British English"
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "英式英语"
+        }
+      }
+    }
+  },
+  "美式英语": {
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "American English"
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "美式英语"
+        }
+      }
+    }
+  },
+  "自动朗读跟随音标选择；指定朗读声音优先。词库缺少所选音标时显示已有音标。": {
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Automatic speech follows this choice; a selected voice takes priority. If unavailable, the dictionary pronunciation is shown."
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "自动朗读跟随音标选择；指定朗读声音优先。词库缺少所选音标时显示已有音标。"
+        }
+      }
+    }
+  },
+  "输入单词或短语": {
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Enter a word or phrase"
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "输入单词或短语"
+        }
+      }
+    }
+  },
+  "查询": {
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Look up"
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "查询"
+        }
+      }
+    }
+  },
+  "关闭": {
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Close"
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "关闭"
+        }
+      }
+    }
+  },
+  "正在查询…": {
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Looking up…"
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "正在查询…"
+        }
+      }
+    }
+  },
+  "此词条未提供音标": {
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "No phonetic transcription available"
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "此词条未提供音标"
+        }
+      }
+    }
+  },
+  "朗读单词": {
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Speak word"
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "朗读单词"
+        }
+      }
+    }
+  },
+  "选中文字后按查词快捷键，或在这里输入后按回车": {
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Select text and press the lookup shortcut, or type here and press Return."
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "选中文字后按查词快捷键，或在这里输入后按回车"
+        }
+      }
+    }
+  },
+  "授权读取选中文字": {
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Allow selected-text access"
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "授权读取选中文字"
+        }
+      }
+    }
+  },
+  "查词快捷键": {
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Dictionary shortcut"
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "查词快捷键"
+        }
+      }
+    }
+  },
+  "朗读声音": {
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Speech voice"
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "朗读声音"
+        }
+      }
+    }
+  },
+  "自动选择语言": {
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Automatic language"
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "自动选择语言"
+        }
+      }
+    }
+  },
+  "朗读速度：%.2f×": {
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Speech speed: %.2f×"
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "朗读速度：%.2f×"
+        }
+      }
+    }
+  },
+  "试听": {
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Preview voice"
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "试听"
+        }
+      }
+    }
+  },
+  "打开系统词典": {
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Open Dictionary"
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "打开系统词典"
+        }
+      }
+    }
+  },
+  "优先查询选中文字；未选中文字时输入查询。使用本机已下载词库，读音由系统语音合成。": {
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Looks up selected text or lets you type a query. Uses downloaded system dictionaries and synthesized speech."
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "优先查询选中文字；未选中文字时输入查询。使用本机已下载词库，读音由系统语音合成。"
+        }
+      }
+    }
+  },
+  "系统词典": {
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "System Dictionary"
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "系统词典"
+        }
+      }
+    }
+  },
+  "请输入要查询的单词或短语": {
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Enter a word or phrase to look up."
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "请输入要查询的单词或短语"
+        }
+      }
+    }
+  },
+  "请输入不超过 200 字的单词或短语": {
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Enter a word or phrase of up to 200 characters."
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "请输入不超过 200 字的单词或短语"
+        }
+      }
+    }
+  },
+  "未找到释义，请检查拼写或在系统词典中下载所需词库": {
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "No definition found. Check the spelling or download the required dictionary in Dictionary."
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "未找到释义，请检查拼写或在系统词典中下载所需词库"
+        }
+      }
+    }
+  },
+  "词典服务暂不可用，请重试": {
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Dictionary service unavailable. Please try again."
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "词典服务暂不可用，请重试"
+        }
+      }
+    }
+  },
+  "媒体键接管已启动": {
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Media-key interception is active"
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "媒体键接管已启动"
+        }
+      }
+    }
+  },
+  "媒体键接管未启动": {
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Media-key interception is inactive"
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "媒体键接管未启动"
+        }
+      }
+    }
+  },
+  "定位当前应用": {
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Reveal current app"
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "定位当前应用"
+        }
+      }
+    }
+  },
+  "在辅助功能中开启当前自定义版；若列表中没有，点加号添加右侧按钮定位的应用。返回后开启替换系统状态提示。": {
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Enable this custom app in Accessibility. If missing, use the plus button to add the app revealed by the button above. Return here and enable Replace system HUD."
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "在辅助功能中开启当前自定义版；若列表中没有，点加号添加右侧按钮定位的应用。返回后开启替换系统状态提示。"
+        }
+      }
+    }
+  },
+  "展开系统提示卡片": {
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Expand system HUD card"
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "展开系统提示卡片"
+        }
+      }
+    }
+  },
+  "提示卡片样式": {
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "HUD card style"
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "提示卡片样式"
+        }
+      }
+    }
+  },
+  "紧凑卡片": {
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Compact card"
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "紧凑卡片"
+        }
+      }
+    }
+  },
+  "完整卡片": {
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Full card"
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "完整卡片"
+        }
+      }
+    }
+  },
+  "显示百分比": {
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Show percentage"
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "显示百分比"
+        }
+      }
+    }
+  },
+  "Toggle mute": {
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Toggle mute"
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "切换静音"
+        }
+      }
+    }
+  },
+  "回车查询": {
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Press Return to look up"
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "回车查询"
+        }
+      }
+    }
+  },
   "向左跑": {
     "localizations": {
       "en": {

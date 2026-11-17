@@ -32,6 +32,9 @@ assert set(archs)=={'arm64','x86_64'},archs
 helper=p/'Contents/XPCServices/BoringNotchXPCHelper.xpc/Contents/Info.plist'
 h=plistlib.loads(helper.read_bytes())
 assert h['CFBundleIdentifier']==d['CFBundleIdentifier']+'.BoringNotchXPCHelper'
+assert tuple(map(int,h.get('LSMinimumSystemVersion','15.0').split('.'))) <= tuple(map(int,d['LSMinimumSystemVersion'].split('.')))
+helper_binary=helper.parent/'MacOS'/h['CFBundleExecutable']
+assert set(subprocess.check_output(['lipo','-archs',str(helper_binary)],text=True).split())=={'arm64','x86_64'}
 print('PASS: public identity, version, macOS 15 minimum, disabled updater and universal app')
 PY
 mkdir -p "$out"

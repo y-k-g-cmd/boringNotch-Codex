@@ -13,13 +13,18 @@
 - 复制区和剪切区，可拖到区域入口切换收纳方式。内部切区只修改记录，不操作原文件。
 - 双指切页、任务浏览区域划分，中英文设置、区域顺序和隔空投送显示开关。
 
-不支持在刘海内自由输入新的后续指令；不接入 Claude Code、WorkBuddy 或额度查询。
+- 内置跑猫、CPU 趋势与内存状态；Codex 额度卡片、刷新反馈及可能断联提醒。
+- 手动音量／亮度提示，可在授权后替换系统提示。
+- 系统词典快捷查词，显示三个简短中文义项，支持英美音标、朗读声音与语速设置。
+- 手机扫码遥控 Apple Books 翻页，局域网服务手动启停，无需额外终端或 Python。
+
+不支持在刘海内自由输入新的后续指令；不接入 Claude Code 或 WorkBuddy。
 
 ## 构建与安装
 
-测试版：[v0.1.0-beta.2](https://github.com/y-k-g-cmd/boringNotch-Codex/releases/tag/v0.1.0-beta.2)，基于构建 271.21，提供 DMG 和 ZIP，适用 macOS 15+，包含 Apple Silicon 与 Intel。请先阅读 [安装及限制](docs/BETA_INSTALL.md)。这是 ad-hoc 本地签名、尚未经过 Developer ID 签名或 Apple 公证的测试包。
+测试版：[v0.1.0-beta.3](https://github.com/y-k-g-cmd/boringNotch-Codex/releases/tag/v0.1.0-beta.3)，基于构建 271.40，提供 DMG 和 ZIP，适用 macOS 15+，包含 Apple Silicon 与 Intel。请先阅读 [安装及限制](docs/BETA_INSTALL.md)。这是 ad-hoc 本地签名、尚未经过 Developer ID 签名或 Apple 公证的测试包。
 
-从源码构建见 [BUILDING.md](BUILDING.md)。应用显示版本为 0.1.0，构建号为 271.18。
+从源码构建见 [BUILDING.md](BUILDING.md)。应用显示版本为 0.1.0，构建号为 271.40。
 
 首次运行时按需要授权 Codex 数据目录、文件夹及媒体等功能。新 fork 使用独立 Bundle ID，原本本地版的设置和安全书签不会自动迁移。
 
@@ -30,6 +35,10 @@ Codex 接入使用桌面客户端的非公开本地 IPC，并读取授权目录�
 目录选择授权范围覆盖整个被选目录；代码不读取 `auth.json`。任务名称、摘要等数据在本机展示；请勿把真实会话数据放进问题反馈或截图。请求操作由用户主动点击提交，不自动代选或审批。详见 [PRIVACY.md](PRIVACY.md)。
 
 ## 验证状态
+
+当前本地功能版已实测：系统提示接管、快捷键输入查词、紧凑释义与收起动画、iPhone 实际 Books 翻页、新用量浮窗及刷新反馈。模拟三次额度读取失败通过真实刘海链路验证：只展开一次，约六秒收起，期间 Codex 保持连接。公开身份仍需使用者独立授权，不能直接继承本地测试版的权限。
+
+详细更新见 [CHANGELOG.md](CHANGELOG.md)，手机翻页说明见 [PHONE_READER.md](docs/PHONE_READER.md)。
 
 本地 271.18：Finder 直接拖至复制／剪切文字入口、区域高亮、内部切区及拖入区域时的触觉反馈均已由用户实测；异步选择题提交曾验证。源会话路由、过期请求拒绝、流式刷新和重连有回归检查。
 

@@ -75,3 +75,9 @@
 - 6 个附件：DMG、ZIP、对应源码、BUILD-INFO.json、INSTALL.md、SHA256SUMS.txt。全部以未登录方式重新下载，SHA256 与本地一致；GitHub 服务端摘要也一致。
 - 公开版双架构 Archive、严格签名、镜像校验及挂载后应用严格签名通过；macOS 15 起，Intel 未做硬件实测。公开身份完整授权及拖放验收仍不等同于旧本地身份的实测。
 - main 文档提交 26b4f06 的 GitHub 源码检查通过（run 39225692322）；未开启 Pages／自动更新，仍为 ad-hoc 签名，未经过 Developer ID 签名或 Apple 公证。
+
+## Beta 3：v0.1.0-beta.3（2026-11-17）
+
+- 本轮准备发布公开身份的 0.1.0（271.40），汇总 Beta 2 后的 Codex 兼容、系统提示、查词、手机翻页和系统用量浮窗更新。
+- 本地实机结果及模拟异常链路见 CHANGELOG；发布构建来源、架构和最低系统以本轮 BUILD-INFO.json 为准。
+- 继续采用 ad-hoc 签名，未公证，自动更新关闭；不覆盖历史 Release，不向上游提交更新。

@@ -9,6 +9,13 @@ import Foundation
 
 /// The protocol that this service will vend as its API. This protocol will also need to be visible to the process hosting the service.
 @objc protocol BoringNotchXPCHelperProtocol {
+    func booksRemote(_ action: String, with reply: @escaping (Data) -> Void)
+    func selectedDictionaryText(_ pid: Int32, with reply: @escaping (String, Bool) -> Void)
+    func dictionaryDefinition(_ word: String, with reply: @escaping (String?) -> Void)
+
+    func configureMediaKeys(_ volume: Bool, brightness: Bool, backlight: Bool, with reply: @escaping (Bool) -> Void)
+    func stopMediaKeys()
+
     // Fixed read-only CLI operation; returns only quota windows, never account credentials.
     func readCodexUsage(with reply: @escaping (Data?, String?) -> Void)
     // Connect only to the current user's fixed Codex status socket.
@@ -24,4 +31,8 @@ import Foundation
     func isScreenBrightnessAvailable(with reply: @escaping (Bool) -> Void)
     func currentScreenBrightness(with reply: @escaping (NSNumber?) -> Void)
     func setScreenBrightness(_ value: Float, with reply: @escaping (Bool) -> Void)
+}
+
+@objc protocol NotchMediaKeyReceiver {
+    func receiveMediaKey(_ data: Int, flags: UInt)
 }

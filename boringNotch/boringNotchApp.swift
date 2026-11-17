@@ -351,6 +351,10 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                 }
         }
 
+        KeyboardShortcuts.onKeyUp(for: .lookupDictionary) {
+            Task { @MainActor in NotchDictionary.shared.trigger() }
+        }
+
         KeyboardShortcuts.onKeyDown(for: .toggleSneakPeek) { [weak self] in
             guard let self = self else { return }
             if Defaults[.sneakPeekStyles] == .inline {
@@ -436,7 +440,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         }
         if Defaults[.hudReplacement] {
             Task { @MainActor in
-               let authorized = MediaKeyInterceptor.shared.isAccessibilityAuthorized()
+               let authorized = await MediaKeyInterceptor.shared.isAccessibilityAuthorized()
                 if authorized {
                     MediaKeyInterceptor.shared.start(requireAccessibility: true, promptIfNeeded: false)
                 } else {

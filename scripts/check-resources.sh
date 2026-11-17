@@ -5,7 +5,9 @@ build="$root/.local-build"
 mkdir -p "$build/module-cache"
 xcrun swiftc -swift-version 5 -module-cache-path "$build/module-cache" \
   "$root/boringNotch/XPCHelperClient/BoringNotchXPCHelperProtocol.swift" \
-  "$root/boringNotch/components/Codex/NotchResources.swift" \
+  "$root/boringNotch/extensions/PanGesture.swift" \
+  "$root/Tests/NotchIntegration/SettingsWindowStub.swift" \
+  "$root"/boringNotch/components/Codex/*.swift \
   "$root/Tests/NotchIntegration/ResourceChecks.swift" -o "$build/resource-checks"
 "$build/resource-checks"
 xcrun swiftc -module-cache-path "$build/module-cache" \

@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#f4f1e9">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="翻页">
+<title>手机翻页器</title>
+<style>
+:root{color-scheme:light;--paper:#f4f1e9;--ink:#253b32;--muted:#596960;--line:#cbd1c6;--green:#285744}
+*{box-sizing:border-box}body{margin:0;background:var(--paper);color:var(--ink);font:17px/1.6 -apple-system,BlinkMacSystemFont,"PingFang SC",sans-serif}
+main{max-width:600px;min-height:100svh;margin:auto;padding: max(24px,env(safe-area-inset-top)) 24px max(24px,env(safe-area-inset-bottom));display:flex;flex-direction:column;gap:24px}
+header{display:flex;align-items:center;justify-content:space-between;gap:12px}h1{font-size:21px;margin:0;font-weight:600;letter-spacing:.04em}#connection{font-size:13px;color:var(--muted)}
+.intro{margin:0;color:var(--muted);font-size:15px}#controls{flex:1;display:flex;flex-direction:column;gap:16px}button,input{font:inherit}button{cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent}button:focus-visible,input:focus-visible{outline:3px solid #b5752c;outline-offset:4px}
+.turn{width:100%;flex:1;min-height:148px;border:1px solid var(--line);border-radius:24px;background:#e7eadd;color:var(--ink);display:flex;justify-content:space-between;align-items:center;padding:32px;font-size:27px;font-weight:500;user-select:none;-webkit-user-select:none;transition:transform .1s,background .1s}
+.turn.next{background:var(--green);color:#fff;border-color:var(--green);flex:1.35}.turn:active{transform:scale(.98)}.arrow{font-size:40px;font-weight:300}.turn:disabled{opacity:.5;cursor:default}#notice{min-height:48px;margin:0;font-size:14px;color:var(--muted)}#notice.error{color:#a23824}
+#pair{margin:auto 0;display:flex;flex-direction:column;gap:18px}h2{font-size:28px;margin:0}label{font-size:15px}input{display:block;width:100%;margin-top:8px;border:1px solid var(--line);border-radius:14px;background:#fffdf8;padding:16px;font-size:27px;letter-spacing:.2em;color:var(--ink)}.connect{min-height:58px;border:0;border-radius:14px;background:var(--green);color:white;font-weight:600}#help{margin:0;font-size:13px;color:var(--muted)}[hidden]{display:none!important}
+@media(max-height:520px) and (orientation:landscape){#controls{display:grid;grid-template-columns:1fr 1fr;grid-template-rows:auto 1fr}#controls .intro{grid-column:1/-1}.turn{min-height:130px;padding:22px;font-size:25px;white-space:nowrap}main{gap:12px}}
+@media(prefers-color-scheme:dark){:root{color-scheme:dark;--paper:#17201b;--ink:#e6eddf;--muted:#aebbad;--line:#465347;--green:#386b52}.turn{background:#28372b}input{background:#222e25;color:var(--ink)}#notice.error{color:#ffab92}}
+@media(prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body><main>
+<header><h1>手机翻页器</h1><span id="connection" role="status">等待连接</span></header>
+<form id="pair"><h2>连接你的 Mac</h2><p class="intro">在 boringNotch 设置 → 通用 → 阅读遥控中启动服务，输入 8 位配对码。</p><label for="pin">配对码<input id="pin" inputmode="numeric" pattern="[0-9]{8}" maxlength="8" autocomplete="off" placeholder="输入 8 位数字" required></label><button class="connect" type="submit">连接 Mac</button></form>
+<section id="controls" aria-label="图书翻页" hidden><p class="intro">在 Mac“图书”中打开 EPUB 正文。</p><button class="turn" id="prev" type="button"><span class="arrow" aria-hidden="true">←</span><span>上一页</span></button><button class="turn next" id="next" type="button"><span>下一页</span><span class="arrow" aria-hidden="true">→</span></button></section>
+<p id="notice" role="status" aria-live="polite"></p><p id="help">保持 Mac 唤醒，连接同一 Wi-Fi。</p>
+</main>
+<script>
+const $=id=>document.getElementById(id);
+let token='',busy=false,checking=false;
+try{token=location.hash.slice(1)||sessionStorage.getItem('page-turner-token')||'';if(token)sessionStorage.setItem('page-turner-token',token)}catch(e){token=location.hash.slice(1)}
+if(location.hash)history.replaceState(null,'',location.pathname);
+function notice(text,error=false){$('notice').textContent=text;$('notice').classList.toggle('error',error)}
+function connected(ok){$('pair').hidden=ok;$('controls').hidden=!ok;$('connection').textContent=ok?'已连接 Mac':'等待配对'}
+function saveToken(value){token=value;try{if(value)sessionStorage.setItem('page-turner-token',value);else sessionStorage.removeItem('page-turner-token')}catch(e){}}
+async function request(path,body){const controller=new AbortController();const timeout=setTimeout(()=>controller.abort(),15000);try{const r=await fetch(path,{method:body?'POST':'GET',headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},body:body?JSON.stringify(body):undefined,cache:'no-store',signal:controller.signal});const data=await r.json();if(!r.ok){if(r.status===401&&path!='/pair'){saveToken('');connected(false)}throw new Error(data.error||'连接失败')}return data}finally{clearTimeout(timeout)}}
+$('pair').addEventListener('submit',async e=>{e.preventDefault();const button=$('pair').querySelector('button');button.disabled=true;try{const data=await request('/pair',{pin:$('pin').value});saveToken(data.token);connected(true);notice('已连接，可以翻页了。')}catch(e){notice(e.name==='AbortError'?'连接超时，请检查 Mac 和 Wi-Fi。':e.message,true)}finally{button.disabled=false}});
+async function turn(direction){if(busy)return;busy=true;$('prev').disabled=$('next').disabled=true;notice('正在发送…');try{await request('/turn',{direction,id:Date.now().toString(36)+'-'+Math.random().toString(36).slice(2)});$('connection').textContent='已连接 Mac';notice(direction==='next'?'已发送下一页按键':'已发送上一页按键')}catch(e){notice(e.name==='AbortError'?'响应超时，请确认 Mac 的书页后再点一次。':(e instanceof TypeError?'连接中断，请检查 Mac 上的翻页器是否仍在运行。':e.message),true);$('connection').textContent=token?'请检查 Mac':'等待配对'}finally{busy=false;$('prev').disabled=$('next').disabled=false}}
+$('prev').onclick=()=>turn('prev');$('next').onclick=()=>turn('next');
+async function check(){if(!token||busy||checking||document.hidden)return;checking=true;try{await request('/health');connected(true)}catch(e){$('connection').textContent=token?'未连接':'等待配对';notice('请确认 Mac 上的翻页器正在运行；重启后需重新配对。',true)}finally{checking=false}}
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)check()});window.addEventListener('online',check);setInterval(check,15000);check();
+</script></body></html>
